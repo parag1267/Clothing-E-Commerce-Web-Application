@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+body{
+font-family: "Source Sans Pro", sans-serif;
+}
+
+
+/* User Panel */
+/* Header  */
+.nav-link {
+  @apply hover:text-red-500 transition-colors pb-1 text-gray-700;
+}
+
+.nav-link.active {
+  @apply text-red-500 border-b-2 border-red-500;
+}
+
+.mobile-nav-link {
+  @apply text-center py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-50;
+}
+
+.mobile-nav-link.active {
+  @apply bg-red-50 text-red-500 font-medium;
+}
+
+
+/* Form Input Filed */
+@layer components {
+
+  /* 🔹 Input */
+  .input-global {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg
+           text-sm text-gray-700 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6]
+           transition;
+  }
+
+  /* 🔹 Label */
+  .label-global {
+    @apply block text-sm font-medium mb-1 text-gray-700;
+  }
+
+  /* 🔹 Error */
+  .input-error {
+    @apply text-xs text-red-500 mt-1;
+  }
+
+  /* 🔹 Primary Button */
+  .btn-primary {
+    @apply w-full bg-[#3B82F6] text-white py-3 rounded-lg
+           font-semibold hover:bg-blue-600 transition;
+  }
+
+  /* 🔹 Secondary Button */
+  .btn-secondary {
+    @apply w-full border border-gray-300 text-gray-700 py-3 rounded-lg
+           hover:bg-gray-100 transition;
+  }
+
+  /* 🔹 Checkbox / Radio */
+  .radio-global {
+    @apply accent-[#3B82F6] w-4 h-4;
+  }
+
+}
+
+
+
+
+/* Categories Men And Women */
+.category-pagination .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: #000;
+  opacity: 0.3;
+}
+
+.category-pagination .swiper-pagination-bullet-active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Trending Polo */
+.swiper-button-next,
+.swiper-button-prev {
+  color: black !important;
+  width: 31px !important;
+  height: 31px !important;
+}
+
+.swiper-pagination {
+  display: block;
+  margin-top: 20px;
+  position: relative !important;
+  color: #000000 !important;
+}
+
+@media (max-width: 1023px) {
+    .swiper-button-next,
+    .swiper-button-prev{
+      display: none !important;
+    }
+
+    
+}
+
+@media (min-width: 1024px) {
+    .swiper-pagination {
+      display: none !important;
+    }
+}
+
+/* Scrollbar Hide */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+
+/* Admin Profile */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.2s ease-out;
+}
