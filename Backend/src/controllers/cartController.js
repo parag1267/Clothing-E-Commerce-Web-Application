@@ -21,12 +21,34 @@ const addToCart = async (req, res) => {
             })
         }
 
+        if (quantity > 5) {
+            return res.status(400).json({
+                success: false,
+                message: "Maximum 5 quantity allowed per item"
+            })
+        }
+
         const product = await PRODUCT_MODEL.findById(productId);
 
         if (!product || !product.isActive) {
             return res.status(404).json({
                 success: false,
                 message: "Product not available"
+            })
+        }
+
+        const sizeObj = product.sizes.find(s => s.size === size)
+        if (!sizeObj) {
+            return res.status(404).json({
+                success: false,
+                message: `Size ${size} not available`
+            })
+        }
+
+        if (sizeObj.stock < quantity) {
+            return res.status(400).json({
+                success: false,
+                message: `Only ${sizeobj.stock} items left in stock`
             })
         }
 
@@ -45,7 +67,20 @@ const addToCart = async (req, res) => {
         );
 
         if (existingItem) {
-            existingItem.quantity += quantity;
+            const newQty = existingItem.quantity + quantity
+            if (newQty > 5) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum 5 quantity allowed per item"
+                })
+            }
+            if (newQty > sizeObj.stock) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Only ${sizeObj.stock} items available in stock`
+                })
+            }
+            existingItem.quantity = newQty;
         }
         else {
             cart.items.push({ product: productId, quantity, size, price: product.price });
@@ -98,15 +133,33 @@ const updateCartItem = async (req, res) => {
         }
 
         if (action === "inc") {
+            if (item.quantity >= 5) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Maximum 5 quantity allowed per item"
+                })
+            }
+
+            const product = await PRODUCT_MODEL.findById(productId)
+            const sizeObj = product?.sizes.find(s => s.size === size)
+
+            if (!sizeObj || item.quantity >= sizeObj.stock) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Only ${sizeObj?.stock || 0} items available in stock`
+                })
+            }
+
             item.quantity += 1;
         }
         else if (action === "dec") {
-            item.quantity -= 1;
-            if (item.quantity <= 0) {
-                cart.items = cart.items.filter(
-                    i => i.product.toString() !== productId
-                )
+            if (item.quantity <= 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Minimum quantity is 1"
+                })
             }
+            item.quantity -= 1;
         }
 
         await cart.save();

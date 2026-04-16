@@ -17,12 +17,12 @@ const AddEditProduct = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
 
-  const { createSuccess, updateSuccess, loading, product: editProduct } = useSelector(state => state.products);
+  const { createSuccess, updateSuccess, loading, product: editProduct, error } = useSelector(state => state.products);
   const { categories } = useSelector(state => state.category);
   const { subCategories } = useSelector(state => state.subCategory);
 
   const [images, setImages] = useState([]);
-  
+
 
   // Load Categories
   useEffect(() => {
@@ -39,7 +39,7 @@ const AddEditProduct = () => {
     }
   }, [id, dispatch, isEditMode]);
 
-  
+
   // Covert size array to string for edit mode
   const formatSizes = (sizes) => {
     if (!sizes) return ""
@@ -178,7 +178,7 @@ const AddEditProduct = () => {
     }
   }, [editProduct])
 
-  
+
   // 🔥 Fetch subcategories when category exists
   useEffect(() => {
     if (formik.values.category) {
@@ -326,7 +326,7 @@ const AddEditProduct = () => {
                 value={formik.values.category}
                 onChange={(e) => {
                   formik.handleChange(e)
-                  formik.setFieldValue("subCategory","")
+                  formik.setFieldValue("subCategory", "")
                 }}
                 onBlur={formik.handleBlur}
                 error={formik.errors.category}
@@ -565,6 +565,12 @@ const AddEditProduct = () => {
               </label>
             </div>
           </div>
+
+          {error && (
+            <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <div className="p-6 border-gray-50 rounded-b-xl flex gap-3 justify-end">
             <button type='button' className='px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200' onClick={() => formik.resetForm()}>

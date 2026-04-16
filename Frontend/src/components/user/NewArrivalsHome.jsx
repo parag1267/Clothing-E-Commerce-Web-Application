@@ -3,13 +3,15 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchNewArrivals } from '../../features/products/productSlice';
 import { getWishlist, toggleWishlist } from '../../features/wishlist/wishlistSlice';
+import { useNavigate } from 'react-router-dom';
 
 const NewArrivalsHome = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {wishlist} = useSelector(state => state.wishlist);
+  const { wishlist } = useSelector(state => state.wishlist);
 
-  const handleWishlist = (productId) => {
-    console.log("Click button",productId)
+  const handleWishlist = (e,productId) => {
+    e.stopPropagation();
     dispatch(toggleWishlist(productId));
   };
 
@@ -35,78 +37,100 @@ const NewArrivalsHome = () => {
       <section className='max-w-7xl mx-auto px-4 md:px-6 py-20'>
         <div className="flex flex-col sm:flex-row items-center md:justify-between mb-10 text-center sm:text-left gap-2 md:gap-4">
           <div>
-            <h2 className='text-3xl md:text-4xl font-bold'>
+            <h2 className='text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900 mt-1'>
               New Arrivals
             </h2>
 
-            <p className='text-gray-500 mt-1'>
+            <p className='text-gray-400 mt-1 text-sm'>
               Discover our latest fashion collection
             </p>
           </div>
 
-          <button className="hidden lg:block border px-5 py-2 rounded-full hover:bg-black hover:text-white transition">
-            View More
+          <button
+            onClick={() => navigate('/product/newarrival')}
+            className="hidden lg:block border px-5 py-2 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-300">
+            View All
           </button>
 
 
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-          {newArrivals.map((product) => {
-            const hasDiscount = product.discountPercentage > 0 ||
-              (product.discountPrice && product.discountPrice < product.price);
-            const displayPrice = hasDiscount ? product.discountPrice : product.price;
-            const originalPrice = hasDiscount ? product.price : null;
-            const discountPercent = product.discountPercentage || calculateDiscountPercentage(product.price, product.discountPrice)
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+          {newArrivals.map((item) => {
+
+            const hasDiscount = item.discountPercentage > 0 ||
+              (item.discountPrice && item.discountPrice < item.price)
+            const displayPrice = hasDiscount ? item.discountPrice : item.price
+            const originalPrice = hasDiscount ? item.price : null
 
             return (
-              <div key={product._id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300 relative">
-                <div className="relative overflow-hidden">
-                  <img src={product.images?.[0]?.url} alt={product.name} className='h-48 sm:h-56 md:h-64 w-full object-cover group-hover:scale-105 transition duration-500' />
+              <div key={item._id} className="group cursor-pointer">
+
+                <div
+                  className="aspect-3/4 relative overflow-hidden rounded-xl"
+                  onClick={() => navigate(`/product/${item._id}`, { state: item })}
+                >
+                  <img
+                    src={item.images?.[0]?.url}
+                    alt={item.name}
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:opacity-0 group-hover:scale-105"
+                  />
+
+                  {item.images?.[1]?.url && (
+                    <img
+                      src={item.images?.[1]?.url}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105"
+                    />
+                  )}
 
                   {hasDiscount && (
-                    <span className='absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded'>
-                      {discountPercent}% OFF
+                    <span className="md:absolute md:top-3 md:left-3 md:bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                      ₹{Math.round(originalPrice - displayPrice)} OFF
                     </span>
                   )}
 
-                  <button onClick={() => handleWishlist(product._id)} className='absolute top-3 right-3 bg-white p-2 rounded-full shadow hover:text-red-500'>
-                    <Heart size={16} className={`transition ${isWishlisted(product._id) ? "fill-red-500 text-red-500" : "text-gray-500"}`}  />
+                  <button
+                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow cursor-pointer"
+                    onClick={(e) => handleWishlist(e, item._id)}
+                  >
+                    <Heart
+                      size={16}
+                      className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 ${isWishlisted(item._id) ? 'fill-red-500 text-red-500' : 'text-gray-500'}`}
+                    />
                   </button>
-
                 </div>
 
-                <div className="p-3 md:p-4 pb-12">
-                  <p className="text-xs md:text-sm text-gray-500">
-                    {product.category?.name}
-                  </p>
-
-                  <h3 className="font-semibold text-sm md:text-base mt-1">
-                    {product.name}
+                <div className="mt-2">
+                  <h3 className="text-xs md:text-sm text-[#585c70] font-semibold  border-b border-dashed border-gray-300 pb-0.5">
+                    {item.name}
                   </h3>
 
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className='text-black font-bold text-sm md:text-lg'>
-                      ₹{Math.round(displayPrice)}
-                    </span>
+                  <p className="text-xs md:text-sm text-[#737577] mt-1">
+                    {item.subCategory?.name}
+                  </p>
 
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm text-[#58595B] font-semibold">
+                      ₹{Math.round(displayPrice)}
+                    </p>
                     {originalPrice && (
-                      <span className="text-gray-400 line-through text-xs md:text-sm">
+                      <p className="text-xs text-gray-400 line-through">
                         ₹{Math.round(originalPrice)}
-                      </span>
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <button className="absolute -bottom-1 -right-1 bg-black text-white p-3 rounded-xl shadow hover:bg-gray-800 transition">
-                  <ShoppingCart size={18} />
-                </button>
               </div>
             )
           })}
         </div>
-        <div className="lg:hidden mt-4 text-center">
-          <button className="border px-5 py-2 rounded-full hover:bg-black hover:text-white transition">
+
+        <div className="lg:hidden mt-6 text-center">
+          <button
+            onClick={() => navigate('/product/newarrival')}
+            className="border px-5 py-2 rounded-full hover:bg-blue-500 hover:text-white transition">
             View More
           </button>
         </div>

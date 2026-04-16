@@ -56,7 +56,7 @@ export const updateSubCategories = createAsyncThunk(
             formData.append("category", data.category?._id || data.category);
             formData.append("isActive", data.isActive);
 
-            if (data.images) {
+            if (data.images && data.images instanceof File) {
                 formData.append("image", data.images);
             }
 
@@ -65,6 +65,7 @@ export const updateSubCategories = createAsyncThunk(
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             )
+            onsole.log("Update Response:", res.data.subCategory)
             return res.data.subCategory;
         } catch (error) {
             console.log(error.response?.data);
@@ -78,7 +79,7 @@ export const deleteSubCategories = createAsyncThunk(
     async(id,{rejectWithValue}) => {
         try {
             const res = await axios.delete(`http://localhost:5000/api/subCategory/${id}`)
-            return res.data.subCategory
+            return id
         } catch (error) {
             return rejectWithValue(error.response?.data || "Deleted failed")
         }

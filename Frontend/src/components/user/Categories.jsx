@@ -19,7 +19,6 @@ const Categories = ({ categorySlug }) => {
   }, [dispatch, categorySlug])
 
   const handleCategoryClick = (cate) => {
-    console.log("Clicked Item 👉", cate);
     navigate(`/product-list?category=${cate.category?.slug}&sub=${cate.slug}`)
   }
 
@@ -32,10 +31,22 @@ const Categories = ({ categorySlug }) => {
 
   return (
     <section className='py-8 md:py-12'>
-      <h2 className='text-center text-[28px] font-semibold mb-6 md:mb-10'>
-        CATEGORIES
-      </h2>
+      {/* Section Heading — matches logo brand color */}
+      <div className="text-center mb-6 md:mb-10">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900">
+          Categories
+        </h2>
 
+        <p className="text-gray-400 mt-3 text-sm md:text-base max-w-sm mx-auto leading-relaxed">
+          Find your perfect style, all in one place
+        </p>
+
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="h-0.5 w-12 bg-gray-200 rounded-full" />
+          <div className="h-0.75 w-8 bg-blue-500 rounded-full" />
+          <div className="h-0.5 w-12 bg-gray-200 rounded-full" />
+        </div>
+      </div>
       <div className="lg:hidden px-4">
 
         <Swiper
@@ -53,7 +64,7 @@ const Categories = ({ categorySlug }) => {
                 {group.map((cate, index) => (
                   <div
                     key={cate._id}
-                    onClick={() => {handleCategoryClick(cate)}
+                    onClick={() => { handleCategoryClick(cate) }
                     } className="group cursor-pointer">
                     <div className="overflow-hidden bg-gray-100">
                       <img src={cate.images?.url} alt={cate.name} className="w-full h-50 object-cover transition-transform duration-500 group-hover:scale-110" />

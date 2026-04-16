@@ -14,6 +14,11 @@ const orderItemSchema = new mongoose.Schema({
         required: true
     },
 
+    sku: {
+        type: String,
+        required: true
+    },
+
     quantity: {
         type: Number,
         required: true
@@ -32,7 +37,7 @@ const orderItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "user",
         required: true
     },
 
@@ -44,7 +49,7 @@ const orderSchema = new mongoose.Schema({
     },
 
     shippingAddress: {
-        fullName: String,
+        fullname: String,
         phone: String,
         address: String,
         city: String,
@@ -64,8 +69,16 @@ const orderSchema = new mongoose.Schema({
 
     orderStatus: {
         type: String,
-        enum: ["Processing","shipped","Delivered","Cancelled"],
-        default: "Processing"
+        enum: ["processing","shipped","delivered","cancelled"],
+        default: "processing"
+    },
+
+    deliveredAt: {
+        type: Date
+    },
+
+    cancelledAt: {
+        type: Date
     }
 },{timestamps: true})
 

@@ -1,17 +1,12 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchUserProfile } from '../features/auth/authSlice';
 import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoutes = () => {
     const dispatch = useDispatch();
-    const { user, loading } = useSelector(state => state.auth)
+    const { user, appLoading } = useSelector(state => state.auth)
 
-    useEffect(() => {
-        dispatch(fetchUserProfile())
-    }, [dispatch])
-
-    if (loading) {
+    if (appLoading) {
         return <div className="text-center mt-10">Loading...</div>
     }
 

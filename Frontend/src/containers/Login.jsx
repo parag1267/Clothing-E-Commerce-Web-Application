@@ -13,7 +13,7 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { loading } = useSelector((state) => state.auth);
+  const { loginLoading } = useSelector((state) => state.auth);
 
   const validationSchema = Yup.object({
     email: Yup.string().email().required("Email is required"),
@@ -73,8 +73,8 @@ const Login = () => {
             touched={formik.touched.password}
           />
 
-          <button className='btn-primary' type='submit' disabled={loading}>
-            {loading ? "Logging in.." : "Login"}
+          <button className='btn-primary' type='submit' disabled={loginLoading}>
+            {loginLoading ? "Logging in.." : "Login"}
           </button>
 
           <div className="m-2 text-center">

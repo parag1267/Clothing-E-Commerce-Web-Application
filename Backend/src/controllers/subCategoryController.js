@@ -3,7 +3,7 @@ const SUBCATEGORY_MODEL = require('../models/subCategoryModel');
 const PRODUCT_MODEL = require('../models/productModel');
 const cloudinary = require('../config/cloudinary');
 const slugify = require('slugify');
-const uploadImage = require('../utils/cloudinaryUpload');
+const {uploadImage,deleteImage} = require('../utils/cloudinaryUpload');
 
 const createSubCategory = async (req, res) => {
     try {
@@ -209,7 +209,7 @@ const updateSubCategory = async (req, res) => {
 
         if (req.file) {
             if(subCategory.images?.public_id){
-                await cloudinary.uploader.destroy(subCategory.images.public_id)
+                await deleteImage(subCategory.images.public_id)
             }
 
             const result = await uploadImage(
@@ -234,13 +234,6 @@ const updateSubCategory = async (req, res) => {
         if (category) {
             subCategory.category = category;
         }
-
-
-        // const updatedSubCategory = await SUBCATEGORY_MODEL.findByIdAndUpdate(
-        //     id,
-        //     updateData,
-        //     { new: true }
-        // )
 
         await subCategory.save();
 

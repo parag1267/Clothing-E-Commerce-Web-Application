@@ -13,7 +13,7 @@ const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const {loading} = useSelector((state) => state.auth);
+  const { registerLoading } = useSelector((state) => state.auth);
 
   const validationSchema = Yup.object({
     fullname: Yup.string().min(4).required("Fullname is an required"),
@@ -22,7 +22,7 @@ const Register = () => {
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
       "Password must be strong Character"
     ).required("Password is an required"),
-    confirmPassword: Yup.string().oneOf([Yup.ref("password")],"Password must match").required("Confirm password is required"),
+    confirmPassword: Yup.string().oneOf([Yup.ref("password")], "Password must match").required("Confirm password is required"),
     mobileNo: Yup.string().matches(/^[6-9]\d{9}$/, "Enter valid 10 digit mobile number").required("Phone is required"),
   })
 
@@ -43,17 +43,17 @@ const Register = () => {
         resetForm();
         navigate("/login");
       } catch (error) {
-        if(typeof error === "string"){
+        if (typeof error === "string") {
           toast.error(error);
         }
-        else{
+        else {
           toast.error(error?.message || "Registeration failed");
         }
       }
     }
   });
 
-  
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-3">
@@ -114,8 +114,8 @@ const Register = () => {
             touched={formik.touched.confirmPassword}
           />
 
-          <button className='btn-primary' type='submit' disabled={loading}>
-            {loading ? "Registering.." : "Register"}
+          <button className='btn-primary' type='submit' disabled={registerLoading}>
+            {registerLoading ? "Registering.." : "Register"}
           </button>
 
           <div className="m-2 text-center">

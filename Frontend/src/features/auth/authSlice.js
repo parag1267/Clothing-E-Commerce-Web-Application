@@ -3,7 +3,11 @@ import axios from "axios";
 
 const initialState = {
     user: null,
-    loading: false,
+    isAuthenticated: false,
+    loginLoading: false,
+    registerLoading: false,
+    profileLoading: false,
+    appLoading: true,
     error: null
 }
 
@@ -71,56 +75,68 @@ const authSlice = createSlice({
     reducers: {
         logout: (state) => {
             state.user = null;
-        }
+            state.isAuthenticated = false;
+            state.appLoading = false;
+        },
+        setAppLoading: (state, action) => {   
+        state.appLoading = action.payload;
+    }
     },
     extraReducers: (builder) => {
         builder
             .addCase(registerUser.pending, (state) => {
-                state.loading = true;
+                state.registerLoading = true;
                 state.error = null;
             })
 
             .addCase(registerUser.fulfilled, (state, action) => {
-                state.loading = false;
+                state.registerLoading = false;
                 state.user = action.payload.user;
+                state.isAuthenticated = true;
             })
 
             .addCase(registerUser.rejected, (state, action) => {
-                state.loading = false;
+                state.registerLoading = false;
                 state.error = action.payload;
             })
 
             .addCase(loginUser.pending, (state) => {
-                state.loading = true;
+                state.loginLoading = true;
                 state.error = null;
             })
 
             .addCase(loginUser.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loginLoading = false;
                 state.user = action.payload.user;
+                state.isAuthenticated = true;
             })
 
             .addCase(loginUser.rejected, (state, action) => {
-                state.loading = false;
+                state.loginLoading = false;
                 state.error = action.payload;
                 state.user = null;
+                state.isAuthenticated = false;
             })
 
             .addCase(fetchUserProfile.pending, (state) => {
-                state.loading = true;
+                state.profileLoading = true;
                 state.error = null;
             })
 
             .addCase(fetchUserProfile.fulfilled, (state, action) => {
-                state.loading = false;
+                state.appLoading = false;
+                state.profileLoading = false;
                 state.user = action.payload;
+                state.isAuthenticated = true;
             })
 
             .addCase(fetchUserProfile.rejected, (state, action) => {
-                state.loading = false;
+                state.profileLoading = false;
+                state.appLoading = false;
                 if(action.payload === "blocked"){
                     state.user = null;
                 }
+                state.isAuthenticated = false;
                 state.error = action.payload;
             })
     }

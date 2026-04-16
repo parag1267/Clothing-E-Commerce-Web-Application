@@ -14,8 +14,6 @@ const Customer = () => {
   const { users, loading, total, totalPages } = useSelector(state => state.users);
   console.log(users);
 
-
-
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');

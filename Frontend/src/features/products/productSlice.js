@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios, { all } from "axios";
 
 const initialState = {
+    relatedProducts: [],
     trendingAll: [],
     trendingPolo: [],
     newArrivals: [],
@@ -178,6 +179,20 @@ export const deleteProduct = createAsyncThunk(
     }
 )
 
+export const fetchRelatedProducts = createAsyncThunk(
+    "products/fetchRelatedProducts",
+    async ({subCategory,excludeId},{rejectWithValue}) => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/products`,{
+                params: {tab: subCategory}
+            })
+
+            return res.data.products.filter(p => p._id !== excludeId)
+        } catch (error) {
+            return rejectWithValue(error.response?.data ||"Failed Realted products")
+        }
+    }
+)
 
 
 export const productSlice = createSlice({
@@ -227,7 +242,12 @@ export const productSlice = createSlice({
 
             .addCase(fetchNewArrivals.fulfilled, (state, action) => {
                 state.loading = false;
-                state.newArrivals = action.payload.products;
+                if(action.payload.currentPage === 1){
+                    state.newArrivals = action.payload.products;
+                }
+                else {
+                    state.newArrivals = [...state.newArrivals,...action.payload.products]
+                }
                 state.totalPages = action.payload.totalPages;
                 state.currentPage = action.payload.currentPage;
             })
@@ -366,6 +386,22 @@ export const productSlice = createSlice({
             })
 
             .addCase(deleteProduct.rejected,(state,action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            // Related product
+            .addCase(fetchRelatedProducts.pending,(state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(fetchRelatedProducts.fulfilled,(state,action) => {
+                state.loading = false;
+                state.relatedProducts = action.payload;
+            })
+
+            .addCase(fetchRelatedProducts.rejected,(state,action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

@@ -17,8 +17,6 @@ const Home = () => {
 
         <NewArrivalsHome />
 
-        {/* <BestSellers />  */}
-
         <TrendingProduct />
 
         <Newsletter />

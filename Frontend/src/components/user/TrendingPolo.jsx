@@ -20,9 +20,21 @@ const TrendingPolo = () => {
     }, [dispatch])
     return (
         <section className="py-8 md:py-12 bg-gray-50">
-            <h2 className='uppercase  text-center text-lg md:text-2xl lg:text-3xl font-semibold tracking-widest mb-4 md:mb-10'>
-                What's trending in polos
-            </h2>
+            <div className="text-center mb-4 md:mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900">
+                    What's Trending in Polos
+                </h2>
+
+                <p className="text-gray-400 mt-3 text-sm md:text-base max-w-sm mx-auto leading-relaxed">
+                    Fresh styles, top picks — just for you
+                </p>
+
+                <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="h-0.5 w-12 bg-gray-200 rounded-full" />
+                    <div className="h-0.75 w-8 bg-blue-500 rounded-full" />
+                    <div className="h-0.5 w-12 bg-gray-200 rounded-full" />
+                </div>
+            </div>
 
             <div className="px-2 md:px-6 relative">
                 <Swiper
