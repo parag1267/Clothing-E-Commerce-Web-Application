@@ -1,21 +1,63 @@
 import { Heart, Menu, Package, Search, ShoppingBag, ShoppingCart, User, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { fetchUserProfile } from '../../features/auth/authSlice';
 import { getWishlist } from '../../features/wishlist/wishlistSlice';
 import { fetchCart } from '../../features/cart/cartSlice';
+import axios from 'axios';
 
 const Header = () => {
     const dispatch = useDispatch();
-    const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
+
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const searchRef = useRef(null);
 
     useEffect(() => {
         dispatch(fetchUserProfile());
         dispatch(getWishlist());
         dispatch(fetchCart())
-    }, [dispatch])
+    }, [])
+
+    useEffect(() => {
+        if (searchQuery.trim().length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setSearchLoading(true);
+            try {
+                const res = await axios.get(
+                    'http://localhost:5000/api/products/search',
+                    { params: { query: searchQuery } }
+                )
+                setSearchResults(res.data.products || [])
+            } catch (error) {
+                setSearchResults([])
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 400)
+        return () => clearTimeout(timer);
+    }, [searchQuery])
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setSearchFocused(false);
+                setSearchResults([]);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     const { cart } = useSelector(state => state.cart);
     const { user } = useSelector(state => state.auth);
@@ -29,18 +71,85 @@ const Header = () => {
     const totalWishlist = wishlist?.length || 0;
 
     const handleUserClick = () => {
-        if (user) {
-            navigate('/profile')
+        navigate(user ? '/profile' : '/login');
+    };
+
+    const handleSearchSubmit = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+
+        const query = searchQuery.trim();
+        if (!query) return;
+
+        const savedResults = [...searchResults];
+        setSearchFocused(false);
+        setSearchResults([]);
+        setSearchQuery('');
+
+        try {
+            let results = savedResults
+
+            if (results.length === 0) {
+                const res = await axios.get(
+                    'http://localhost:5000/api/products/search',
+                    { params: { query } }
+                );
+                results = res.data.products || [];
+            }
+
+            if (results.length === 0) {
+                navigate(`/products?search=${encodeURIComponent(query)}`);
+                return;
+            }
+
+            const categoryCount = {};
+            results.forEach(p => {
+                const slug = p.category?.slug;
+                if (slug) categoryCount[slug] = (categoryCount[slug] || 0) + 1;
+            });
+
+            const detectedCategory = Object.entries(categoryCount)
+                .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+            const filteredResults = detectedCategory
+                ? results.filter(p => p.category?.slug === detectedCategory)
+                : results;
+
+            const detectedSubCategories = [
+                ...new Set(
+                    filteredResults.map(p => p.subCategory?.slug).filter(Boolean)
+                )
+            ];
+            const params = new URLSearchParams();
+            if (detectedCategory) params.set("category", detectedCategory);
+            if (detectedSubCategories.length > 0) {
+                params.set("sub", detectedSubCategories.join(","));
+            }
+            params.set("search", query);
+
+            navigate(`/products?${params.toString()}`);
+        } catch (error) {
+            navigate(`/products?search=${encodeURIComponent(query)}`);
         }
-        else {
-            navigate('/login')
-        }
+    };
+
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`);
+        setSearchFocused(false);
+        setSearchResults([]);
+        setSearchQuery('');
     }
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSearchResults([]);
+    };
+
+    const showDropdown = searchFocused && searchQuery.trim().length >= 2;
 
     return (
         <>
             <header className='bg-[#F8FAFC] shadow-sm sticky top-0 z-40'>
-                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div className="max-w-8xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             className='lg:hidden text-gray-700 p-1'
@@ -73,21 +182,107 @@ const Header = () => {
                     <div className="flex items-center gap-4">
 
                         {/* Search — lg+ only */}
-                        <form className="hidden lg:flex items-center bg-gray-100 rounded-full px-3 py-1.5 focus-within:bg-white focus-within:border focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                            <Search size={16} className='text-gray-400' />
-                            <input
-                                type="text"
-                                placeholder='Search..'
-                                className='outline-none px-2 text-sm w-36 lg:w-48 bg-transparent'
-                            />
-                        </form>
+                        <div ref={searchRef} className="hidden lg:block relative">
+                            <form
+                                onSubmit={handleSearchSubmit}
+                                className="flex items-center rounded-full px-3 py-1.5 ring-1 cursor-text bg-gray-100 ring-transparent hover:bg-gray-200 w-60 border border-blue-500"
+                            >
+                                <Search
+                                    size={16}
+                                    className={`shrink-0 transition-colors duration-200 text-blue-500`}
+                                />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onFocus={() => setSearchFocused(true)}
+                                    placeholder='Search..'
+                                    className='outline-none px-2 text-gray-800 text-sm bg-transparent w-full'
+                                />
+                                {searchQuery && (
+                                    <X
+                                        size={14}
+                                        className="text-gray-600 cursor-pointer hover:text-gray-600 shrink-0"
+                                        onClick={clearSearch}
+                                    />
+                                )}
+                            </form>
+                            {/* ── DROPDOWN ── */}
+                            {showDropdown && (
+                                <div className="absolute top-full mt-2 left-0 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+
+                                    {/* Loading state */}
+                                    {searchLoading ? (
+                                        <div className="px-4 py-3 text-sm text-gray-400">
+                                            Searching...
+                                        </div>
+
+                                    ) : searchResults.length === 0 ? (
+                                        /* No results */
+                                        <div className="px-4 py-3 text-sm text-gray-400">
+                                            No results for "{searchQuery}"
+                                        </div>
+
+                                    ) : (
+                                        <>
+                                            {/* Group results by category */}
+                                            {[...new Set(searchResults.map(p => p.subCategory?.name))].map(catName => (
+                                                <div key={catName}>
+                                                    {/* Category header */}
+                                                    <p className="px-4 pt-3 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                                                        {catName}
+                                                    </p>
+                                                    {/* Products under that category */}
+                                                    {searchResults
+                                                        .filter(p => p.subCategory?.name === catName)
+                                                        .slice(0, 3)
+                                                        .map(product => (
+                                                            <div
+                                                                key={product._id}
+                                                                onClick={() => handleProductClick(product._id)}
+                                                                className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors"
+                                                            >
+                                                                <img
+                                                                    src={product.images?.[0]?.url}
+                                                                    alt={product.name}
+                                                                    className="w-9 h-9 rounded-lg object-cover border border-gray-100 shrink-0"
+                                                                />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-800 truncate">
+                                                                        {product.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-400">
+                                                                        {product.subCategory?.name}
+                                                                    </p>
+                                                                </div>
+                                                                <p className="text-sm font-semibold text-blue-500 shrink-0">
+                                                                    ₹{product.price}
+                                                                </p>
+                                                            </div>
+                                                        ))
+                                                    }
+                                                </div>
+                                            ))}
+
+                                            {/* View all results */}
+                                            <div
+                                                onClick={handleSearchSubmit}
+                                                className="px-4 py-3 text-sm text-center text-blue-500 font-medium hover:bg-blue-50 cursor-pointer border-t border-gray-100 transition-colors"
+                                            >
+                                                View all results for "{searchQuery}"
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         {/* Track Order — lg+ only */}
                         <div
                             className="hidden lg:block relative cursor-pointer"
                             onClick={() => navigate('/track-order')}
                         >
-                            <Package size={22} className='hover:text-blue-500 transition-colors text-gray-600' />
+                            <Package size={22} className='hover:text-blue-600 transition-colors text-blue-500' />
                         </div>
 
                         {/* Wishlist — always visible */}
@@ -98,11 +293,11 @@ const Header = () => {
                             <Heart
                                 size={22}
                                 className={`transition-colors ${totalWishlist > 0
-                                    ? 'fill-red-500 text-red-500'
-                                    : 'text-gray-600 hover:text-red-500'}`}
+                                    ? 'red-500 text-blue-500'
+                                    : 'text-blue-600 hover:text-blue-700'}`}
                             />
                             {totalWishlist > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full font-medium">
+                                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full font-medium">
                                     {totalWishlist}
                                 </span>
                             )}
@@ -117,7 +312,7 @@ const Header = () => {
                                 size={22}
                                 className={`transition-colors ${totalItems > 0
                                     ? 'text-blue-500'
-                                    : 'text-gray-600 hover:text-blue-500'}`}
+                                    : 'text-blue-600 hover:text-blue-700'}`}
                             />
                             {totalItems > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full font-medium">
@@ -136,26 +331,39 @@ const Header = () => {
                                         className='w-8 h-8 rounded-full object-cover hover:scale-105 transition'
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white font-semibold uppercase text-sm hover:bg-red-600 transition">
+                                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white font-semibold uppercase text-sm hover:bg-blue-700 transition">
                                         {user.fullname?.charAt(0) || "U"}
                                     </div>
                                 )
                             ) : (
-                                <User size={22} className='hover:text-blue-500 transition-colors text-gray-600' />
+                                <User size={22} className='text-blue-600 hover:text-blue-700 transition-colors ' />
                             )}
                         </div>
                     </div>
 
                 </div>
 
-                <div className="lg:hidden px-4 py-3">
-                    <form className="flex items-center bg-gray-100 rounded-full px-3 py-2 gap-2">
+                <div className="lg:hidden px-4 py-2">
+                    <form
+                        onSubmit={handleSearchSubmit}
+                        className="flex items-center bg-gray-100 rounded-full px-3 py-2 gap-2"
+                    >
                         <Search size={16} className='text-gray-400 shrink-0' />
                         <input
                             type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setSearchFocused(true)}
                             placeholder='Search for products...'
                             className='outline-none text-sm bg-transparent w-full text-gray-700 placeholder-gray-400'
                         />
+                        {searchQuery && (
+                            <X
+                                size={14}
+                                className="text-gray-400 cursor-pointer hover:text-gray-600 shrink-0"
+                                onClick={clearSearch}
+                            />
+                        )}
                     </form>
                 </div>
             </header>

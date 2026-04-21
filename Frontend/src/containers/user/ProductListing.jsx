@@ -13,8 +13,9 @@ const SORT_OPTIONS = [
 const ProductListing = () => {
   const [searchParams] = useSearchParams();
 
-  const category = searchParams.get("category");
+  const category = searchParams.get("category") || null;
   const sub = searchParams.get("sub");
+  const search = searchParams.get("search");
 
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPrice, setSelectedPrice] = useState(null);
@@ -28,6 +29,8 @@ const ProductListing = () => {
   useEffect(() => {
     if (sub) {
       setSelectedCategories(sub.split(","));
+    } else {
+      setSelectedCategories([])
     }
   }, [sub]);
 
@@ -45,8 +48,17 @@ const ProductListing = () => {
     selectedSizes.length +
     (selectedPrice ? 1 : 0)
 
+  const pageTitle = search
+    ? `Results for "${search}"`
+    : sub
+      ? sub.split(",").join(", ")
+      : category
+        ? `${category} Collection`
+        : "All Products";
+
   return (
     <div className='flex flex-col lg:flex-row gap-2 relative'>
+
       {/* ===== Desktop Sidebar ===== */}
       <div className="hidden lg:block w-72 shrink-0 sticky top-0 h-screen overflow-y-auto">
         <FilterSidebar
@@ -69,7 +81,11 @@ const ProductListing = () => {
             {SORT_OPTIONS.find(o => o.value === selectedSort)?.label}
           </p>
 
-          <select 
+          <div className="w-fit px-4 py-2 text-sm text-gray-500 lg:hidden">
+            {pageTitle}
+          </div>
+
+          <select
             value={selectedSort}
             onChange={(e) => setSelectedSort(e.target.value)}
             className='hidden lg:block text-sm text-gray-700 border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ml-auto'
@@ -97,6 +113,7 @@ const ProductListing = () => {
           selectedBrands={selectedBrands}
           selectedSizes={selectedSizes}
           selectedSort={selectedSort}
+          search={search}
         />
       </div>
 
@@ -132,7 +149,7 @@ const ProductListing = () => {
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowFilterDrawer(false)} />
 
           <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col">
-            
+
             <div className="w-8 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
@@ -191,13 +208,12 @@ const ProductListing = () => {
                     setShowSortDrawer(false)
                   }}
                   className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all ${selectedSort === option.value
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-800"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-800"
                     }`}
                 >
-                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                    selectedSort === option.value ? "border-blue-600" : "border-gray-300"
-                  }`}>
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedSort === option.value ? "border-blue-600" : "border-gray-300"
+                    }`}>
                     {selectedSort === option.value && (
                       <span className="w-2 h-2 rounded-full bg-blue-600 block" />
                     )}

@@ -6,13 +6,13 @@ const router = express.Router();
 
 
 // User Routes
+router.get('/search',searchProducts);
 router.get('/all-trending',getAllTrendingProducts);
 router.get('/polo-trending',getAllPoloTrendingProducts);
-router.get('/search',searchProducts);
 router.get('/newarrival',getNewArrivalProducts);
 router.get('/category/:categoryId',getproductsByCategory);
 router.get('/tags/:tag',getProductsByTag);
-router.get('/:id',getSingleProduct);
+router.get('/Allcategory/tabs/:category',getTabs);
 
 // Admin Routes
 router.post('/',upload.array("images",8),createProduct);
@@ -23,7 +23,7 @@ router.patch('/newarrival/:id',updatedNewArrival);
 
 // Generic Routes
 router.get('/',getAllProducts);
-router.get('/Allcategory/tabs/:category',getTabs);
+router.get('/:id',getSingleProduct);
 
 
 

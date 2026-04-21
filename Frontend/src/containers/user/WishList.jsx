@@ -64,7 +64,9 @@ const WishList = () => {
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
 
         {/* Image */}
-        <div className="relative aspect-3/4 overflow-hidden">
+        <div 
+          className="relative aspect-3/4 overflow-hidden"
+          onClick={() => navigate(`/product/${product._id}`)}>
           <img
             src={product.images?.[0]?.url}
             alt={product.name}

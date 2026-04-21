@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
-import { logout, fetchUserProfile } from '../../features/auth/authSlice'
+import { logout, fetchUserProfile, logoutUser } from '../../features/auth/authSlice'
 import { useNavigate } from 'react-router-dom'
 import { Camera, Mail, Phone, Calendar, User, LogOut, Save, X, ShoppingBag, Package } from 'lucide-react'
 import { useFormik } from 'formik'
@@ -68,7 +68,7 @@ const Profile = () => {
     }
 
     const handleLogout = () => {
-        dispatch(logout())
+        dispatch(logoutUser())
         dispatch(resetWishlist())
         dispatch(clearCart())
         navigate("/login")

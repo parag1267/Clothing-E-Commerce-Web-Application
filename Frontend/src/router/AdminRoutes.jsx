@@ -10,6 +10,7 @@ import SubCategories from '../containers/admin/SubCategories'
 import Order from '../containers/admin/Order'
 import Profile from '../containers/admin/Profile'
 import Settings from '../containers/admin/Settings'
+import ContactInfo from '../containers/admin/ContactInfo'
 
 const AdminRouters = () => {
   return (
@@ -26,6 +27,7 @@ const AdminRouters = () => {
           <Route path='orders' element={<Order/>}/>
           <Route path='profile' element={<Profile />}/>
           <Route path='settings' element={<Settings />}/>
+          <Route path='contactInfo' element={<ContactInfo />}/>
         </Route>
       </Routes>
     </>

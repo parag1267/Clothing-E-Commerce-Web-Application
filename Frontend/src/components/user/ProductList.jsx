@@ -37,7 +37,7 @@ const ProductList = ({ category }) => {
 
     return (
         <section className="pb-8 md:pb-12 bg-white">
-            <div className="sticky top-27.5 lg:top-13 z-30 bg-white border-b border-gray-100 px-2 md:px-6">
+            <div className="sticky top-27.5 lg:top-15 z-30 bg-white border-b border-gray-100 px-2 md:px-6">
                 <div className="flex gap-2 overflow-x-auto py-3 md:py-4 scrollbar-hide">
                     {tabs.map((tab) => (
                         <button

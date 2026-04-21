@@ -162,14 +162,61 @@ const createProduct = async (req, res) => {
     }
 }
 
+const SPECIAL_TABS = ["trending", "isNewArrival", "active", "inactive"];
+
 const getAllProducts = async (req, res) => {
     try {
-        const { tab, category, page = 1, limit = 20, minPrice, maxPrice, brands, sizes,sort } = req.query;
+        const { tab, sub, category, page = 1, limit = 20, minPrice, maxPrice, brands, sizes, sort, search } = req.query;
 
         let filter = { isActive: true };
+        let andConditions = [];
+
+        if (search) {
+            const keywords = search.toLowerCase().split(" ").filter(Boolean);
+
+            const [categories, subCategories] = await Promise.all([
+                CATEGORY_MODEL.find({ slug: { $in: keywords } }),
+                SUBCATEGORY_MODEL.find({ slug: { $in: keywords } })
+            ]);
+
+            if (categories.length > 0) {
+                andConditions.push({
+                    category: { $in: categories.map(c => c._id) }
+                });
+            }
+
+            if (subCategories.length > 0) {
+                andConditions.push({
+                    subCategory: { $in: subCategories.map(s => s._id) }
+                });
+            }
+
+            const usedSlugs = [
+                ...categories.map(c => c.slug),
+                ...subCategories.map(s => s.slug)
+            ];
+
+            const remainingKeywords = keywords.filter(
+                word => !usedSlugs.includes(word)
+            );
+
+            if (remainingKeywords.length > 0) {
+                andConditions.push({
+                    $or: remainingKeywords.flatMap(word => ([
+                        { name: { $regex: word, $options: "i" } },
+                        { brand: { $regex: word, $options: "i" } },
+                        { tags: { $elemMatch: { $regex: word, $options: "i" } } }
+                    ]))
+                });
+            }
+
+            if (andConditions.length > 0) {
+                filter.$and = andConditions;
+            }
+        }
 
         if (category) {
-            const categoryData = await CATEGORY_MODEL.findOne({ slug: category });
+            const categoryData = await CATEGORY_MODEL.findOne({ slug: category.toLowerCase().trim() });
             if (categoryData) {
                 filter.category = categoryData._id;
             }
@@ -178,30 +225,27 @@ const getAllProducts = async (req, res) => {
         if (tab === "trending") {
             filter.isTrending = true;
         }
-
         else if (tab === "isNewArrival") {
             filter.isNewArrival = true;
         }
-
         else if (tab === "active") {
             filter.isActive = true;
         }
-
         else if (tab === "inactive") {
             filter.isActive = false;
         }
 
-        else if (tab) {
-            const slugArray = tab.split(",").map(s => s.trim())
+        const subValues = sub || (!SPECIAL_TABS.includes(tab) ? tab : null);
 
+        if (subValues) {
+            const slugArray = subValues.split(",").map(s => s.trim().toLowerCase());
             const subCategoryDocs = await SUBCATEGORY_MODEL.find({
                 slug: { $in: slugArray }
-            })
-
+            });
             if (subCategoryDocs.length > 0) {
                 filter.subCategory = {
                     $in: subCategoryDocs.map(s => s._id)
-                }
+                };
             }
         }
 
@@ -213,14 +257,14 @@ const getAllProducts = async (req, res) => {
 
         if (brands) {
             const brandArray = brands.split(",").map(b => b.trim());
-            if(brandArray.length > 0){
+            if (brandArray.length > 0) {
                 filter.brand = { $in: brandArray };
             }
         }
 
         if (sizes) {
             const sizeArray = sizes.split(",").map(s => s.trim());
-            if(sizeArray.length > 0){
+            if (sizeArray.length > 0) {
                 filter["sizes.size"] = { $in: sizeArray };
             }
         }
@@ -232,16 +276,16 @@ const getAllProducts = async (req, res) => {
         if (filter.subCategory) brandBaseFilter.subCategory = filter.subCategory;
 
         const sizeBaseFilter = { isActive: true };
-        if(filter.category) sizeBaseFilter.category = filter.category;
+        if (filter.category) sizeBaseFilter.category = filter.category;
 
         const menCategory = await CATEGORY_MODEL.findOne({ slug: "men" });
         const womenCategory = await CATEGORY_MODEL.findOne({ slug: "women" });
 
         let sortOption = { createdAt: -1 }
 
-        if(sort === "price_asc") sortOption = { price: 1}
-        else if(sort === "price_desc") sortOption = { price: -1}
-        else if(sort === "newest") sortOption = { createdAt: -1}
+        if (sort === "price_asc") sortOption = { price: 1 }
+        else if (sort === "price_desc") sortOption = { price: -1 }
+        else if (sort === "newest") sortOption = { createdAt: -1 }
 
         const [products, availableBrands, availableSizes, totalProducts, allCount, allMen, allWomen, activeCount, inactiveCount, isNewArrival, trendingCount] = await Promise.all([
             PRODUCT_MODEL.find(filter)
@@ -252,7 +296,7 @@ const getAllProducts = async (req, res) => {
                 .sort(sortOption),
 
             PRODUCT_MODEL.distinct("brand", brandBaseFilter),
-            PRODUCT_MODEL.distinct("sizes.size",sizeBaseFilter),
+            PRODUCT_MODEL.distinct("sizes.size", sizeBaseFilter),
 
             PRODUCT_MODEL.countDocuments(filter),
 
@@ -636,35 +680,89 @@ const updatedNewArrival = async (req, res) => {
 
 const searchProducts = async (req, res) => {
     try {
-        const { query, category } = req.query;
-        let filter = { isActive: true }
+        const { query } = req.query;
+        
+        const keywords = query.toLowerCase().trim().split(" ").filter(Boolean);
 
-        if (query) {
-            filter.$or = [
-                { name: { $regex: query, $options: "i" } },
-                { brand: { $regex: query, $options: "i" } }
-            ]
+        const keywordVariants = [
+            ...new Set([
+                ...keywords,
+                ...keywords.map(k => `${k}s`),
+                ...keywords.map(k => k.endsWith('s') ? k.slice(0, -1) : k),
+            ])
+        ];
+
+        const [categories, subCategories] = await Promise.all([
+            CATEGORY_MODEL.find({
+                $or: [
+                    { slug: { $in: keywordVariants } },
+                    { name: { $in: keywords.map(k => new RegExp(k, 'i')) } }
+                ]
+            }),
+            SUBCATEGORY_MODEL.find({
+                $or: [
+                    { slug: { $in: keywordVariants } },
+                    { name: { $in: keywords.map(k => new RegExp(k, 'i')) } }
+                ]
+            })
+        ]);
+
+        let filter = { isActive: true };
+        let andConditions = [];
+
+        if (categories.length > 0) {
+            andConditions.push({ category: { $in: categories.map(c => c._id) } });
+        }
+        if (subCategories.length > 0) {
+            andConditions.push({ subCategory: { $in: subCategories.map(s => s._id) } });
         }
 
-        if (category) {
-            filter.category = category;
+        const usedKeywords = new Set([
+            ...categories.map(c => c.slug.toLowerCase()),
+            ...categories.map(c => c.name.toLowerCase()),
+            ...subCategories.map(s => s.slug.toLowerCase()),
+            ...subCategories.map(s => s.name.toLowerCase()),
+        ]);
+
+        const remainingKeywords = keywords.filter(word =>
+            !usedKeywords.has(word) &&
+            ![...usedKeywords].some(used => used.includes(word) || word.includes(used))
+        );
+
+        if (remainingKeywords.length > 0) {
+            andConditions.push({
+                $or: remainingKeywords.flatMap(word => [
+                    { name: { $regex: word, $options: "i" } },
+                    { brand: { $regex: word, $options: "i" } },
+                    { tags: { $elemMatch: { $regex: word, $options: "i" } } }
+                ])
+            });
         }
 
-        const products = await PRODUCT_MODEL.find(filter).populate("category subCategory");
+        if (andConditions.length > 0) {
+            filter.$and = andConditions;
+        }
+
+        const products = await PRODUCT_MODEL.find(filter)
+            .populate("category", "name slug")
+            .populate("subCategory", "name slug")
+            .limit(30)
+            .lean();
 
         res.status(200).json({
             success: true,
-            message: "Search product successfully",
-            TotalProducts: products.length,
+            totalProducts: products.length,
             products
-        })
+        });
+
     } catch (error) {
+        console.log("ERROR:", error);
         res.status(500).json({
             success: false,
             message: error.message || "Internal server error"
-        })
+        });
     }
-}
+};
 
 const getNewArrivalProducts = async (req, res) => {
     try {
@@ -714,6 +812,7 @@ const getNewArrivalProducts = async (req, res) => {
 const getproductsByCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
+        const { page = 1, limit = 10 } = req.query;
 
         if (!categoryId) {
             return res.status(400).json({

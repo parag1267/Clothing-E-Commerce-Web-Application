@@ -8,6 +8,7 @@ import wishlistReducer from "../features/wishlist/wishlistSlice";
 import userReducer from "../features/user/userSlice";
 import orderReducer from "../features/order/orderSlice";
 import paymentReducer from "../features/payment/paymentSlice";
+import contactReducer from "../features/contact/contactSlice"
 
 export const store = configureStore({
     reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
         wishlist: wishlistReducer,
         users: userReducer,
         order: orderReducer,
-        payment: paymentReducer
+        payment: paymentReducer,
+        contact: contactReducer
     }
 })

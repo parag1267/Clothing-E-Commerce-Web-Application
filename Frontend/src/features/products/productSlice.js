@@ -43,12 +43,12 @@ export const fetchPoloTrending = createAsyncThunk(
 
 export const fetchNewArrivals = createAsyncThunk(
     "products/fecthNewArrivals",
-    async({page = 1,limit} = {},{rejectWithValue}) => {
+    async ({ page = 1, limit } = {}, { rejectWithValue }) => {
         try {
-            const res= await axios.get(
+            const res = await axios.get(
                 "http://localhost:5000/api/products/newarrival",
                 {
-                    params: {page,limit}
+                    params: { page, limit }
                 }
             )
             return res.data
@@ -74,25 +74,37 @@ export const fetchTabs = createAsyncThunk(
 
 export const fetchProducts = createAsyncThunk(
     "products/fetchProducts",
-    async ({tab,sub, page=1,limit=20,category="men",search = "",minPrice,maxPrice,brands,sizes,sort="newest"}, { rejectWithValue }) => {
+    async ({ tab, sub, page = 1, limit = 20, category = "men", search = "", minPrice, maxPrice, brands, sizes, sort = "newest" }, { rejectWithValue }) => {
         try {
-            const activeTab = sub || tab;
+            const params = {
+                page, limit, sort
+            }
+
+            if(category) params.category = category;
+
+            if(sub){
+                params.sub = sub;
+            }
+            else if(tab){
+                params.tab = tab;
+            }
+
+            if(search) params.search = search;
+
+            if(minPrice !== undefined && minPrice !== null){
+                params.minPrice = minPrice;
+            }
+
+            if(maxPrice !== undefined && maxPrice !== null){
+                params.maxPrice = maxPrice;
+            }
+
+            if (brands) params.brands = brands;
+            if (sizes) params.sizes = sizes;
+
             const res = await axios.get(
                 `http://localhost:5000/api/products`,
-                {
-                    params: {
-                        tab: activeTab,
-                        category,
-                        search,
-                        page,
-                        limit,
-                        minPrice,
-                        maxPrice,
-                        brands,
-                        sizes,
-                        sort
-                    }
-                }
+                { params }
             );
             return res.data;
         } catch (error) {
@@ -181,15 +193,15 @@ export const deleteProduct = createAsyncThunk(
 
 export const fetchRelatedProducts = createAsyncThunk(
     "products/fetchRelatedProducts",
-    async ({subCategory,excludeId},{rejectWithValue}) => {
+    async ({ subCategory, excludeId }, { rejectWithValue }) => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/products`,{
-                params: {tab: subCategory}
+            const res = await axios.get(`http://localhost:5000/api/products`, {
+                params: { tab: subCategory }
             })
 
             return res.data.products.filter(p => p._id !== excludeId)
         } catch (error) {
-            return rejectWithValue(error.response?.data ||"Failed Realted products")
+            return rejectWithValue(error.response?.data || "Failed Realted products")
         }
     }
 )
@@ -242,11 +254,11 @@ export const productSlice = createSlice({
 
             .addCase(fetchNewArrivals.fulfilled, (state, action) => {
                 state.loading = false;
-                if(action.payload.currentPage === 1){
+                if (action.payload.currentPage === 1) {
                     state.newArrivals = action.payload.products;
                 }
                 else {
-                    state.newArrivals = [...state.newArrivals,...action.payload.products]
+                    state.newArrivals = [...state.newArrivals, ...action.payload.products]
                 }
                 state.totalPages = action.payload.totalPages;
                 state.currentPage = action.payload.currentPage;
@@ -348,60 +360,60 @@ export const productSlice = createSlice({
             })
 
             // Update product
-            .addCase(updateProduct.pending,(state) => {
+            .addCase(updateProduct.pending, (state) => {
                 state.loading = true;
                 state.error = null;
                 state.updateSuccess = false;
             })
 
-            .addCase(updateProduct.fulfilled,(state,action) => {
+            .addCase(updateProduct.fulfilled, (state, action) => {
                 state.loading = false;
                 state.updateSuccess = true;
-                state.products = state.products.map(p => 
+                state.products = state.products.map(p =>
                     p._id === action.payload._id ? action.payload : p
                 );
 
-                if(state.product?._id === action.payload._id){
+                if (state.product?._id === action.payload._id) {
                     state.product = action.payload;
                 }
             })
 
-            .addCase(updateProduct.rejected,(state,action) => {
+            .addCase(updateProduct.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
                 state.updateSuccess = false;
             })
 
             // Delete product
-            .addCase(deleteProduct.pending,(state) => {
+            .addCase(deleteProduct.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
 
-            .addCase(deleteProduct.fulfilled,(state,action) => {
+            .addCase(deleteProduct.fulfilled, (state, action) => {
                 state.loading = false;
                 state.products = state.products.filter(
                     p => p._id !== action.payload
                 );
             })
 
-            .addCase(deleteProduct.rejected,(state,action) => {
+            .addCase(deleteProduct.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
 
             // Related product
-            .addCase(fetchRelatedProducts.pending,(state) => {
+            .addCase(fetchRelatedProducts.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
 
-            .addCase(fetchRelatedProducts.fulfilled,(state,action) => {
+            .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
                 state.loading = false;
                 state.relatedProducts = action.payload;
             })
 
-            .addCase(fetchRelatedProducts.rejected,(state,action) => {
+            .addCase(fetchRelatedProducts.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
@@ -409,5 +421,5 @@ export const productSlice = createSlice({
     }
 })
 
-export const { setActiveTab, resetCreateState ,resetUpdateState,clearProduct} = productSlice.actions;
+export const { setActiveTab, resetCreateState, resetUpdateState, clearProduct } = productSlice.actions;
 export default productSlice.reducer;

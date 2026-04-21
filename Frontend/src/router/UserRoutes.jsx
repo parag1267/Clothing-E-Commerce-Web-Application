@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import UserLayout from '../layout/UserLayout'
 import Home from '../containers/user/Home'
 import Contact from '../containers/user/Contact'
@@ -15,8 +15,17 @@ import Successpayment from '../components/user/Successpayment'
 import TrackOrder from '../containers/user/TrackOrder'
 import NewArrivals from '../containers/user/NewArrivals'
 import RelatedProduct from '../containers/user/RelatedProduct'
+import { useSelector } from 'react-redux'
 
 const UserRouters = () => {
+  const { user, appLoading } = useSelector(state => state.auth)
+
+  if (appLoading) {
+    return <div className="text-center mt-10">Loading...</div>
+  }
+
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />
+
   return (
     <>
       <Routes>
@@ -25,6 +34,8 @@ const UserRouters = () => {
           <Route path='/men' element={<Men />}/>
           <Route path='/women' element={<Women />}/>
           <Route path='/product-list' element={<ProductListing />}/>
+          <Route path='/products' element={<ProductListing />}/>
+          <Route path="/search" element={<ProductListing />} />
           <Route path='/product/:id' element={<ProductDetails />}/>
           <Route path='/product/newarrival' element={<NewArrivals />}/>
           <Route path='/product/relatedproduct' element={<RelatedProduct />}/>

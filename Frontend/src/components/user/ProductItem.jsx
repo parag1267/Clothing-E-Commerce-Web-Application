@@ -12,7 +12,13 @@ const PRICE_RANGE = {
     "2000+": { minPrice: 2000, maxPrice: null },
 };
 
-const ProductItem = ({ category, selectedCategories, selectedPrice, selectedBrands, selectedSizes,selectedSort = "newest" }) => {
+const ProductItem = ({ category,
+    selectedCategories,
+    selectedPrice,
+    selectedBrands,
+    selectedSizes,
+    selectedSort = "newest",
+    search }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { products, loading } = useSelector(state => state.products);
@@ -33,16 +39,41 @@ const ProductItem = ({ category, selectedCategories, selectedPrice, selectedBran
 
         const priceFilter = selectedPrice ? PRICE_RANGE[selectedPrice] : {};
 
+        //     dispatch(fetchProducts({
+        //         category,
+        //         sub: subParams,
+        //         brands: brandsParam,
+        //         sizes: sizesParam,
+        //         sort: selectedSort,
+        //         search,
+        //         ...priceFilter
+        //     }))
+        // }, [dispatch, category, selectedCategories.join(","), selectedPrice, selectedBrands.join(","), selectedSizes.join(","), selectedSort, search])
+
         dispatch(fetchProducts({
             category,
             sub: subParams,
             brands: brandsParam,
             sizes: sizesParam,
             sort: selectedSort,
+            search: subParams ? undefined : search,
             ...priceFilter
         }))
-    }, [dispatch, category, selectedCategories.join(","), selectedPrice, selectedBrands.join(","), selectedSizes.join(","),selectedSort])
+    }, [
+        dispatch,
+        category,
+        JSON.stringify(selectedCategories),
+        selectedPrice,
+        JSON.stringify(selectedBrands),
+        JSON.stringify(selectedSizes),
+        selectedSort,
+        search
+    ]
+    )
 
+    if (loading) {
+        return <p className="text-center py-10">Loading...</p>;
+    }
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 px-4 md:px-0 py-4 md:py-6">

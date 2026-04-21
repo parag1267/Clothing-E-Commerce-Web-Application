@@ -35,6 +35,11 @@ font-family: "Source Sans Pro", sans-serif;
            transition;
   }
 
+  textarea.input-global {
+  height: auto;        
+}
+
+
   /* 🔹 Label */
   .label-global {
     @apply block text-sm font-medium mb-1 text-gray-700;

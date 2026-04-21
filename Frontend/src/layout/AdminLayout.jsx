@@ -6,6 +6,7 @@ import {
   FolderTree,
   House,
   LogOut,
+  MessageSquare,
   NotebookTabs,
   Settings,
   ShoppingBag,
@@ -127,6 +128,17 @@ const AdminLayout = () => {
             <NavLink to="/admin/orders" className={linkClass}>
               <ShoppingCart size={20} />
               Orders
+            </NavLink>
+          </div>
+
+          <div className="my-2">
+            <p className="text-gray-500 pb-1 uppercase text-xs tracking-wider">
+              Contact Info
+            </p>
+
+            <NavLink to="/admin/contactInfo" className={linkClass}>
+              <MessageSquare size={20} />
+              Messages
             </NavLink>
           </div>
         </nav>

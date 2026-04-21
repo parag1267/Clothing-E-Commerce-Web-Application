@@ -8,6 +8,7 @@ const initialState = {
     registerLoading: false,
     profileLoading: false,
     appLoading: true,
+    logoutLoading: false,
     error: null
 }
 
@@ -62,9 +63,27 @@ export const fetchUserProfile = createAsyncThunk(
             return res.data.user;
         } catch (error) {
             if (error.response?.status === 403) {
-                return rejectWithValue("Block account")
+                return rejectWithValue("blocked")
             }
             return rejectWithValue(null)
+        }
+    }
+)
+
+// authSlice.js
+export const logoutUser = createAsyncThunk(
+    "auth/logoutUser",
+    async (_, { dispatch, rejectWithValue }) => {
+        try {
+            await axios.post(
+                "http://localhost:5000/api/auth/logout",
+                {},
+                { withCredentials: true }
+            )
+        } catch (error) {
+            rejectWithValue(error.response?.data?.message || "Logout failed")
+        } finally {
+            dispatch(logout())
         }
     }
 )
@@ -77,10 +96,11 @@ const authSlice = createSlice({
             state.user = null;
             state.isAuthenticated = false;
             state.appLoading = false;
+            state.logoutLoading = false;
         },
-        setAppLoading: (state, action) => {   
-        state.appLoading = action.payload;
-    }
+        setAppLoading: (state, action) => {
+            state.appLoading = action.payload;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -133,10 +153,22 @@ const authSlice = createSlice({
             .addCase(fetchUserProfile.rejected, (state, action) => {
                 state.profileLoading = false;
                 state.appLoading = false;
-                if(action.payload === "blocked"){
-                    state.user = null;
-                }
+                state.user = null;
                 state.isAuthenticated = false;
+                state.error = action.payload;
+            })
+
+            .addCase(logoutUser.pending, (state) => {
+                state.logoutLoading = true;
+                state.error = null;
+            })
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.logoutLoading = false;
+                state.user = null;        
+                state.isAuthenticated = false;       
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
+                state.logoutLoading = false;
                 state.error = action.payload;
             })
     }

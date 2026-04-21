@@ -198,9 +198,15 @@ const logout = async (req,res) => {
         })
         }
 
+        const cookieOptions = {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax'
+        }
+
         res
-            .clearCookie("accessToken")
-            .clearCookie("refreshToken")
+            .clearCookie("accessToken",cookieOptions)
+            .clearCookie("refreshToken",cookieOptions)
             .status(200)
             .json({
                 success: true,
@@ -209,7 +215,7 @@ const logout = async (req,res) => {
             })
     } catch (error) {
         res.status(500).json({
-            success: true,
+            success: false,
             message: error.message || "Internal server error"
         })
     }

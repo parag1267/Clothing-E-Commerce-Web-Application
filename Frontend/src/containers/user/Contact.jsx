@@ -1,7 +1,48 @@
+import { useFormik } from 'formik';
 import { Mail, MapPin, Phone } from 'lucide-react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import * as Yup from 'yup'
+import InputField from '../../components/common/InputField'
+import TextAreaField from '../../components/common/TextAreaField'
+import { useDispatch, useSelector } from 'react-redux';
+import { resetContactState, sendContactMessage } from '../../features/contact/contactSlice';
+import { toast } from 'react-toastify';
+
+const contactValidationSchema = Yup.object({
+  name: Yup.string().min(2, 'Name must be at least 2 characters').max(50, 'Name cannot exceed 50 characters').required('Name is required'),
+  email: Yup.string().email('Please enter a valid email address (example@gmail.com)').required('Email is required'),
+  phone: Yup.string().matches(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number').required('Phone number is required'),
+  message: Yup.string().min(10, 'Message must be at least 10 characters').max(500, 'Message cannot exceed 500 characters').required('Message is required')
+})
 
 const Contact = () => {
+  const dispatch = useDispatch();
+
+  const {loading,success,error} = useSelector((state) => state.contact)
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetContactState())
+    }
+  },[dispatch])
+
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+      email: '',
+      phone: '',
+      message: '',
+    },
+
+    validationSchema: contactValidationSchema,
+    onSubmit: async (values,{resetForm}) => {
+      const resultAction = await dispatch(sendContactMessage(values))
+      if (sendContactMessage.fulfilled.match(resultAction)) {
+        resetForm()
+      }
+      toast.success("Submitting message successfully done")
+    }
+  })
   return (
     <div className='bg-gray-50 min-h-screen'>
       <div className="bg-white text-black py-16 px-6 text-center">
@@ -59,27 +100,52 @@ const Contact = () => {
             Send us a message
           </h2>
 
-          <form className='space-y-5'>
-            <input
+          <form className='space-y-5' onSubmit={formik.handleSubmit}>
+            <InputField
+              name="name"
               type="text"
-              placeholder='Your Name'
-              className='w-full border border-gray-200 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition' />
+              placeholder='Your Name *'
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.errors.name}
+              touched={formik.touched.name} />
 
-            <input
+            <InputField
+              name="email"
               type="email"
-              placeholder='Your Email'
-              className='w-full border border-gray-200 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition' />
+              placeholder='Your Email *'
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.errors.email}
+              touched={formik.touched.email} />
 
-            <input
+            <InputField
+              name="phone"
               type="tel"
               placeholder='Phone Number'
-              className='w-full border border-gray-200 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition' />
+              value={formik.values.phone}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.errors.phone}
+              touched={formik.touched.phone} />
 
-            <textarea
-              placeholder='Your Message'
-              rows='4'
-              className='w-full border border-gray-200 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition'
-            />
+            <div>
+              <TextAreaField
+                name="message"
+                placeholder='Your Message *'
+                rows={4}
+                value={formik.values.message}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.errors.message}
+                touched={formik.touched.message}
+              />
+              <p className="text-xs text-gray-400 -mt-3 text-right">
+                {formik.values.message.length}/500
+              </p>
+            </div>
 
             <button className='w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 active:scale-[0.98]'>
               Send Message

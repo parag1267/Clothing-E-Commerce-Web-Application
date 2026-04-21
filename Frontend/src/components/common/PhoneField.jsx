@@ -11,7 +11,7 @@ const PhoneFiled = ({ name, label, placeholder, value, onChange,onBlur,error,tou
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                className={`input-global ${error && touched ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-400 focus:border-gray-400 focus:ring-gray-400'}`}
+                className={`input-global ${error && touched ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-blue-400 focus:border-blue-400 focus:ring-blue-400'}`}
             />
 
             {
