@@ -18,11 +18,7 @@ import RelatedProduct from '../containers/user/RelatedProduct'
 import { useSelector } from 'react-redux'
 
 const UserRouters = () => {
-  const { user, appLoading } = useSelector(state => state.auth)
-
-  if (appLoading) {
-    return <div className="text-center mt-10">Loading...</div>
-  }
+  const { user } = useSelector(state => state.auth)
 
   if (user?.role === 'admin') return <Navigate to="/admin" replace />
 

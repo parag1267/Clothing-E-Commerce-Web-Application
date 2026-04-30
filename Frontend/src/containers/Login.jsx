@@ -10,8 +10,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { loginUser } from '../features/auth/authSlice'
 
 const Login = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { loginLoading } = useSelector((state) => state.auth);
 
@@ -46,6 +46,10 @@ const Login = () => {
       }
     }
   });
+
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/google";
+  }
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-gray-100 px-3'>
@@ -84,18 +88,20 @@ const Login = () => {
             </p>
           </div>
 
-          {/* <div className='flex items-center w-full my-4'>
+          <div className='flex items-center w-full my-4'>
             <div className="flex-1 border-t border-dashed border-gray-400"></div>
             <span className='mx-4 text-gray-600 text-sm font-medium'>OR</span>
             <div className="flex-1 border-t border-dashed border-gray-400"></div>
           </div>
 
           <div className="flex items-center justify-center p-2 mt-4">
-            <button className='flex items-center justify-center gap-3 border-gray-100 rounded-lg p-3 hover:bg-gray-200 bg-gray-100 transition w-full' type='button'>
+            <button 
+              className='flex items-center justify-center gap-3 border-gray-100 rounded-lg p-3 hover:bg-gray-200 bg-gray-100 transition w-full' type='button'
+              onClick={handleGoogleLogin}>
               <img src={goggleIcon} alt="Goggle" className='w-5 h-5' />
               <span className='text-sm font-medium text-gray-700'>Continue with Google</span>
             </button>
-          </div> */}
+          </div>
         </form>
       </div>
     </div>

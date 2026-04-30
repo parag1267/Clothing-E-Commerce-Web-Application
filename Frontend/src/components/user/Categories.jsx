@@ -8,6 +8,37 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchSubCategories } from '../../features/subcategories/subCategoriesSlice';
 import { useNavigate } from 'react-router-dom';
 
+// ─── Skeleton Card ────────────────────────────────────────────────────────────
+
+const SkeletonCard = () => (
+  <div className="animate-pulse">
+    <div className="w-full h-50 lg:h-80 bg-gray-200 rounded" />
+    <div className="mt-2 h-3 w-2/3 bg-gray-200 rounded" />
+  </div>
+);
+
+// ─── Skeleton Mobile (2-col grid) ─────────────────────────────────────────────────
+
+const SkeletonMobile = () => (
+  <div className="lg:hidden px-4">
+    <div className="grid grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <SkeletonCard key={i} imgClass="h-50" />
+      ))}
+    </div>
+  </div>
+);
+
+// ─── Skeleton Desktop (4-col grid) ────────────────────────────────────────────────
+
+const SkeletonDesktop = () => (
+  <div className="hidden lg:grid grid-cols-4 gap-4 px-4">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <SkeletonCard key={i} imgClass="h-80" />
+    ))}
+  </div>
+);
+
 const Categories = ({ categorySlug }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,7 +62,7 @@ const Categories = ({ categorySlug }) => {
 
   return (
     <section className='py-8 md:py-12'>
-      {/* Section Heading — matches logo brand color */}
+      {/* Section Heading */}
       <div className="text-center mb-6 md:mb-10">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900">
           Categories
@@ -47,59 +78,69 @@ const Categories = ({ categorySlug }) => {
           <div className="h-0.5 w-12 bg-gray-200 rounded-full" />
         </div>
       </div>
-      <div className="lg:hidden px-4">
 
-        <Swiper
-          slidesPerView={1}
-          spaceBetween={20}
-          modules={[Pagination]}
-          pagination={{
-            clickable: true,
-            el: ".category-pagination"
-          }}>
 
-          {grouped.map((group, index) => (
-            <SwiperSlide key={index}>
-              <div className="grid grid-cols-2 gap-4">
-                {group.map((cate, index) => (
-                  <div
-                    key={cate._id}
-                    onClick={() => { handleCategoryClick(cate) }
-                    } className="group cursor-pointer">
-                    <div className="overflow-hidden bg-gray-100">
-                      <img src={cate.images?.url} alt={cate.name} className="w-full h-50 object-cover transition-transform duration-500 group-hover:scale-110" />
-                    </div>
+      {loading ? (
+        <>
+          <SkeletonMobile />
+          <SkeletonDesktop />
+        </>
+      ) : (
+        <>
+          <div className="lg:hidden px-4">
+            <Swiper
+              slidesPerView={1}
+              spaceBetween={20}
+              modules={[Pagination]}
+              pagination={{
+                clickable: true,
+                el: ".category-pagination"
+              }}>
 
-                    <p className='mt-1 text-sm tracking-widest text-gray-700'>
-                      {cate.name}
-                    </p>
+              {grouped.map((group, index) => (
+                <SwiperSlide key={index}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {group.map((cate, index) => (
+                      <div
+                        key={cate._id}
+                        onClick={() => { handleCategoryClick(cate) }
+                        } className="group cursor-pointer">
+                        <div className="overflow-hidden bg-gray-100">
+                          <img src={cate.images?.url} alt={cate.name} className="w-full h-50 object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+
+                        <p className='mt-1 text-sm tracking-widest text-gray-700'>
+                          {cate.name}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </SwiperSlide>
-          ))}
+                </SwiperSlide>
+              ))}
 
-        </Swiper>
+            </Swiper>
 
-        <div className="category-pagination mt-6 flex justify-center"></div>
+            <div className="category-pagination mt-6 flex justify-center"></div>
 
-      </div>
+          </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4">
-        {
-          subCategories.map((cate, index) => (
-            <div key={cate._id} onClick={() => handleCategoryClick(cate)} className="group cursor-pointer">
-              <div className="overflow-hidden bg-gray-100">
-                <img src={cate.images?.url} alt={cate.name} className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110" />
-              </div>
+          <div className="hidden lg:grid grid-cols-4 gap-4 px-4">
+            {
+              subCategories.map((cate, index) => (
+                <div key={cate._id} onClick={() => handleCategoryClick(cate)} className="group cursor-pointer">
+                  <div className="overflow-hidden bg-gray-100">
+                    <img src={cate.images?.url} alt={cate.name} className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110" />
+                  </div>
 
-              <p className='mt-1 text-sm tracking-widest text-gray-700'>
-                {cate.name}
-              </p>
-            </div>
-          ))
-        }
-      </div>
+                  <p className='mt-1 text-sm tracking-widest text-gray-700'>
+                    {cate.name}
+                  </p>
+                </div>
+              ))
+            }
+          </div>
+        </>
+      )}
     </section>
   )
 }

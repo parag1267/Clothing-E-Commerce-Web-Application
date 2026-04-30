@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Heart, ShoppingBag } from "lucide-react";
 import {
@@ -12,6 +12,8 @@ import { useNavigate } from "react-router-dom";
 const WishList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [showSizePopup, setShowSizePopup] = useState(false)
+  const [selectedSize, setSelectedSize] = useState(null)
   const { wishlist, loading } = useSelector((state) => state.wishlist);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ const WishList = () => {
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col">
 
         {/* Image */}
-        <div 
+        <div
           className="relative aspect-3/4 overflow-hidden"
           onClick={() => navigate(`/product/${product._id}`)}>
           <img
@@ -75,7 +77,7 @@ const WishList = () => {
 
           {/* Discount Badge */}
           {hasDiscount && (
-            <span className="absolute top-3 left-3 bg-red-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
+            <span className="absolute md:top-3 md:left-3 bg-red-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
               ₹{Math.round(originalPrice - displayPrice)} OFF
             </span>
           )}
@@ -91,35 +93,98 @@ const WishList = () => {
 
         {/* Info */}
         <div className="px-3 pt-3 pb-2 flex flex-col gap-0.5 flex-1">
-          <h3 className="text-sm font-semibold text-gray-800 truncate border-b border-dashed border-gray-200 pb-1">
+          <h3 className="text-[12px] md:text-sm font-semibold text-gray-800 border-b border-dashed border-gray-200 pb-1">
             {product.name}
           </h3>
 
-          <p className="text-xs text-gray-400 mt-1">{product.fitType || product.subCategory?.name}</p>
+          <p className="text-[11px] md:text-sm text-gray-400 mt-1">{product.fitType || product.subCategory?.name}</p>
 
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm font-bold text-gray-900">₹{Math.round(displayPrice)}</p>
+            <p className="text-[13px] md:text-xs font-bold text-gray-900">₹{Math.round(displayPrice)}</p>
             {originalPrice && (
               <p className="text-xs text-gray-400 line-through">₹{Math.round(originalPrice)}</p>
             )}
           </div>
         </div>
 
+        <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+          {product.sizes?.map((s) => (
+            <button
+              key={s.size}
+              onClick={() => setSelectedSize(s.size)}
+              disabled={s.stock === 0}
+              className={`text-[10px] md:text-xs px-2.5 py-1 rounded-lg border font-medium transition-all
+                ${selectedSize === s.size
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : s.stock === 0
+                    ? 'border-gray-200 text-gray-300 cursor-not-allowed line-through'
+                    : 'border-gray-300 text-gray-600 hover:border-gray-900'
+                }`}
+            >
+              {s.size}
+            </button>
+          ))}
+        </div>
+
         {/* Move to Cart */}
         <button
-          onClick={() => handleMoveToCart(product._id)}
-          className="flex items-center justify-center gap-2 w-full py-2.5 border-t border-gray-100 text-xs font-semibold text-gray-700 hover:bg-gray-900 hover:text-white transition-colors duration-200"
+          onClick={() => {
+            if (!selectedSize) {
+              setShowSizePopup(true)
+              return
+            }
+            handleMoveToCart(product._id)
+          }}
+          className="flex items-center justify-center gap-2 w-full py-2.5 border-t border-gray-100 text-[11px] md:text-xs font-semibold text-gray-700 hover:bg-gray-900 hover:text-white transition-colors duration-200"
         >
           <ShoppingBag size={14} />
           MOVE TO CART
         </button>
+
+        {showSizePopup && (
+          <div
+            className="fixed inset-0 z-[9999] bg-black/50 flex items-end sm:items-center justify-center p-4"
+            onClick={() => setShowSizePopup(false)}
+          >
+            <div
+              className="bg-white rounded-2xl w-full max-w-sm p-6 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Icon */}
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <ShoppingBag size={22} className="text-red-400" />
+              </div>
+
+              <h3 className="text-base font-semibold text-gray-900 mb-1">Select a Size</h3>
+              <p className="text-sm text-gray-400 mb-5">Please select a size before adding to cart.</p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSizePopup(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSizePopup(false)
+                    document.getElementById('size-section')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
+                >
+                  Select Size
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 md:px-8 py-10">
+    <div className="min-h-screen bg-gray-50 px-1 md:px-8 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}

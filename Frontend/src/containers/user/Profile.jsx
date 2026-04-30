@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import axios from 'axios'
+import axios from '../../utils/axiosInstance'
 import { logout, fetchUserProfile, logoutUser } from '../../features/auth/authSlice'
 import { useNavigate } from 'react-router-dom'
 import { Camera, Mail, Phone, Calendar, User, LogOut, Save, X, ShoppingBag, Package } from 'lucide-react'
@@ -8,6 +8,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { resetWishlist } from '../../features/wishlist/wishlistSlice'
 import { clearCart } from '../../features/cart/cartSlice'
+import { toast } from 'react-toastify'
 
 const Profile = () => {
     const dispatch = useDispatch();
@@ -16,6 +17,7 @@ const Profile = () => {
     const { user } = useSelector(state => state.auth);
     const [isEdit, setEdit] = useState(false);
     const [preview, setPreview] = useState("");
+    const [submitError, setSubmitError] = useState(null);
 
     useEffect(() => {
         dispatch(fetchUserProfile())
@@ -41,21 +43,35 @@ const Profile = () => {
         }),
 
         onSubmit: async (values) => {
-            const data = new FormData();
-            data.append("fullname", values.fullname);
-            data.append("mobileNo", values.mobileNo);
-            if (values.profileImage) {
-                data.append("profileImage", values.profileImage);
+            setSubmitError(null);
+            setIsSubmitting(true);
+            try {
+                const data = new FormData();
+                data.append("fullname", values.fullname);
+                data.append("mobileNo", values.mobileNo);
+                if (values.profileImage) {
+                    data.append("profileImage", values.profileImage);
+                }
+
+                await axios.put(
+                    "http://localhost:5000/api/auth/profile",
+                    data,
+                    {
+                        withCredentials: true,
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                )
+
+                dispatch(fetchUserProfile())
+                toast.success("Profile updated successfully");
+                setEdit(false);
+            } catch (error) {
+                toast.error(
+                    error.response?.data?.message || "Something went wrong"
+                );
             }
-
-            await axios.put(
-                "http://localhost:5000/api/auth/profile",
-                data,
-                { withCredentials: true }
-            )
-
-            dispatch(fetchUserProfile())
-            setEdit(false);
         }
     })
 
@@ -65,6 +81,13 @@ const Profile = () => {
             formik.setFieldValue("profileImage", file)
             setPreview(URL.createObjectURL(file))
         }
+    }
+
+    const handleCancel = () => {
+        setEdit(false);
+        setSubmitError(null);
+        formik.resetForm();
+        setPreview(user?.profileImage?.url || "");
     }
 
     const handleLogout = () => {
@@ -150,7 +173,7 @@ const Profile = () => {
                                 </div>
                                 <span className="text-sm text-gray-500 font-medium">Email</span>
                             </div>
-                            <span className="text-sm text-gray-800 font-semibold truncate max-w-[180px]">
+                            <span className="text-sm text-gray-800 font-semibold max-w-[180px]">
                                 {user?.email}
                             </span>
                         </div>
@@ -214,7 +237,7 @@ const Profile = () => {
                         <button
                             type="button"
                             onClick={() => navigate('/wishlist')}
-                            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-100 transition-colors"
+                            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 text-sm font-medium hover:bg-gray-100 transition-colors"
                         >
                             <ShoppingBag size={16} />
                             Wishlist
@@ -223,6 +246,13 @@ const Profile = () => {
 
                     {/* BUTTONS */}
                     <div className="mt-4 space-y-3">
+
+                        {submitError && (
+                            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+                                <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+                                <p className="text-sm text-red-600">{submitError}</p>
+                            </div>
+                        )}
 
                         {isEdit ? (
                             <>

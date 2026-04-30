@@ -16,57 +16,57 @@ const isValidMobile = (mobile) => {
     return /^[6-9]\d{9}$/.test(mobile);
 };
 
-const signup = async (req,res) => {
+const signup = async (req, res) => {
     try {
-        const {fullname,email,password,confirmPassword,mobileNo} = req.body;
+        const { fullname, email, password, confirmPassword, mobileNo } = req.body;
 
-        if(!fullname || !email || !password || !confirmPassword || !mobileNo){
+        if (!fullname || !email || !password || !confirmPassword || !mobileNo) {
             return res.status(400).json({
                 success: false,
                 message: "All field are required"
             })
         }
 
-        if(password !== confirmPassword){
+        if (password !== confirmPassword) {
             return res.status(400).json({
                 success: false,
                 message: "Password do not match"
             })
         }
 
-        if(!isValidEmail(email)){
+        if (!isValidEmail(email)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid email format"
             })
         }
 
-        if(!isStrongPassword(password)){
+        if (!isStrongPassword(password)) {
             return res.status(400).json({
                 success: false,
                 message: "Password must be at least 8 characters and include uppercase, lowercase, number and special character"
             })
         }
 
-        if(!isValidMobile(mobileNo)){
+        if (!isValidMobile(mobileNo)) {
             return res.status(400).json({
                 success: false,
                 message: "Mobile number must be 10 digits and valid"
             })
         }
 
-        const existsUser = await USER_MODEL.findOne({email});
+        const existsUser = await USER_MODEL.findOne({ email });
 
-        if(existsUser){
+        if (existsUser) {
             return res.status(400).json({
                 success: false,
                 message: "Email address already exist"
             });
         }
 
-        const existsMobile = await USER_MODEL.findOne({mobileNo});
+        const existsMobile = await USER_MODEL.findOne({ mobileNo });
 
-        if(existsMobile){
+        if (existsMobile) {
             return res.status(400).json({
                 success: false,
                 message: "Mobile number already exist"
@@ -74,7 +74,7 @@ const signup = async (req,res) => {
         }
 
 
-        const hashPassword = await bcrypt.hash(password,11);
+        const hashPassword = await bcrypt.hash(password, 11);
 
         const user = await USER_MODEL.create({
             fullname,
@@ -99,34 +99,41 @@ const signup = async (req,res) => {
     }
 }
 
-const signin = async (req,res) => {
+const signin = async (req, res) => {
     try {
-        const {email,password} = req.body;
+        const { email, password } = req.body;
 
-        if(!email || !password){
+        if (!email || !password) {
             return res.status(400).json({
                 success: false,
                 message: "All field are required"
             })
         }
 
-        if(!isValidEmail(email)){
+        if (!isValidEmail(email)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid email format"
             })
         }
 
-        const user = await USER_MODEL.findOne({email}).select("+password +refreshToken");
-        
-        if(!user){
+        const user = await USER_MODEL.findOne({ email }).select("+password +refreshToken");
+
+        if (!user) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password"
             })
         }
 
-        if(!user.isActive){
+        if (user.authProvider === "google") {
+            return res.status(403).json({
+                success: false,
+                message: "This account uses Google login. Please sign in with google."
+            })
+        }
+
+        if (!user.isActive) {
             return res.status(403).json({
                 success: false,
                 message: "Your account is blcoked. Please contact admin"
@@ -135,7 +142,7 @@ const signin = async (req,res) => {
 
         const isMatch = await bcrypt.compare(password, user.password);
 
-        if(!isMatch){
+        if (!isMatch) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid email or password"
@@ -143,18 +150,18 @@ const signin = async (req,res) => {
         }
 
         const accessToken = jwt.sign(
-            {id: user._id, role: user.role},
+            { id: user._id, role: user.role },
             process.env.ACCESS_TOKEN_SECRET,
-            {expiresIn: "1d"}
+            { expiresIn: "15m" }
         )
 
         const refreshToken = jwt.sign(
-            {id: user._id, role: user.role},
+            { id: user._id, role: user.role },
             process.env.REFRESH_TOKEN_SECRET,
-            {expiresIn: "7d"}
+            { expiresIn: "7d" }
         )
 
-        const hashedToken = await bcrypt.hash(refreshToken,11);
+        const hashedToken = await bcrypt.hash(refreshToken, 11);
         user.refreshToken = hashedToken;
         user.lastLogin = new Date();
         await user.save();
@@ -164,20 +171,20 @@ const signin = async (req,res) => {
         delete userObject.refreshToken;
 
         res
-            .cookie("accessToken",accessToken,{
+            .cookie("accessToken", accessToken, {
                 httpOnly: true,
                 secure: false
             })
-            .cookie("refreshToken",refreshToken,{
+            .cookie("refreshToken", refreshToken, {
                 httpOnly: true,
                 secure: false
             })
             .status(200).json({
-            success: true,
-            message: "Login successfully",
-            user: userObject,
-            accessToken: accessToken
-        })
+                success: true,
+                message: "Login successfully",
+                user: userObject,
+                accessToken: accessToken
+            })
 
     } catch (error) {
         res.status(500).json({
@@ -185,17 +192,17 @@ const signin = async (req,res) => {
             message: error.message || "Internal server error"
         })
     }
-}   
+}
 
-const logout = async (req,res) => {
+const logout = async (req, res) => {
     try {
         const token = req.cookies.refreshToken;
 
-        if(token){
-            const decoded = jwt.verify(token,process.env.REFRESH_TOKEN_SECRET);
-            await USER_MODEL.updateOne({_id: decoded.id},{
-            $unset: {refreshToken: 1}
-        })
+        if (token) {
+            const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+            await USER_MODEL.updateOne({ _id: decoded.id }, {
+                $unset: { refreshToken: 1 }
+            })
         }
 
         const cookieOptions = {
@@ -205,8 +212,8 @@ const logout = async (req,res) => {
         }
 
         res
-            .clearCookie("accessToken",cookieOptions)
-            .clearCookie("refreshToken",cookieOptions)
+            .clearCookie("accessToken", cookieOptions)
+            .clearCookie("refreshToken", cookieOptions)
             .status(200)
             .json({
                 success: true,
@@ -221,10 +228,10 @@ const logout = async (req,res) => {
     }
 }
 
-const profile = async (req,res) => {
+const profile = async (req, res) => {
     try {
         const user = await USER_MODEL.findById(req.user.id);
-        
+
         res.status(200).json({
             success: true,
             message: "profile fetched successfully",
@@ -238,28 +245,28 @@ const profile = async (req,res) => {
     }
 }
 
-const updateProfile = async (req,res) => {
+const updateProfile = async (req, res) => {
     try {
         const user = await USER_MODEL.findById(req.user.id);
 
-        if(!user){
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-        const {fullname,mobileNo} = req.body;
+        const { fullname, mobileNo } = req.body;
 
-        if(fullname) user.fullname = fullname;
-        if(mobileNo) user.mobileNo = mobileNo;
+        if (fullname) user.fullname = fullname;
+        if (mobileNo) user.mobileNo = mobileNo;
 
-        if(req.file){
-            if(user.profileImage?.public_id){
+        if (req.file) {
+            if (user.profileImage?.public_id) {
                 await deleteImage(user.profileImage.public_id)
             }
-            
-            const result = await uploadImage(req.file.buffer,"users");
+
+            const result = await uploadImage(req.file.buffer, "users");
 
             user.profileImage = {
                 url: result.url,
@@ -282,11 +289,11 @@ const updateProfile = async (req,res) => {
     }
 }
 
-const refreshToken = async (req,res) => {
+const refreshToken = async (req, res) => {
     try {
         const token = req.cookies.refreshToken;
 
-        if(!token){
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 user: null,
@@ -301,7 +308,7 @@ const refreshToken = async (req,res) => {
 
         const user = await USER_MODEL.findById(decoded.id).select("+refreshToken");
 
-        if(!user){
+        if (!user) {
             return res.status(401).json({
                 success: false,
                 user: null,
@@ -309,9 +316,9 @@ const refreshToken = async (req,res) => {
             });
         }
 
-        const isValid = await bcrypt.compare(token,user.refreshToken);
+        const isValid = await bcrypt.compare(token, user.refreshToken);
 
-        if(!isValid){
+        if (!isValid) {
             return res.status(401).json({
                 success: false,
                 user: null,
@@ -320,16 +327,22 @@ const refreshToken = async (req,res) => {
         }
 
         const newAccessToken = jwt.sign(
-            {id: user._id, role: user.role},
+            { id: user._id, role: user.role },
             process.env.ACCESS_TOKEN_SECRET,
-            {expiresIn: "15m"}
+            { expiresIn: "15m" }
         );
 
-        res.status(200).json({
-            success: true,
-            message: "Access genrate successfully",
-            accessToken: newAccessToken
-        })
+        res
+            .cookie("accessToken", newAccessToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax"
+            })
+            .status(200).json({
+                success: true,
+                message: "Access genrate successfully",
+                accessToken: newAccessToken
+            })
     } catch (error) {
         return res.status(403).json({
             success: false,
@@ -339,11 +352,49 @@ const refreshToken = async (req,res) => {
     }
 }
 
+const googleAuthCallback = async (req, res) => {
+    try {
+        const user = req.user;
+        const accessToken = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: "15m" }
+        );
+
+        const refreshToken = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        const hashedToken = await bcrypt.hash(refreshToken, 11);
+        user.refreshToken = hashedToken;
+        user.lastLogin = new Date();
+        await user.save();
+
+        res
+            .cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: false
+            })
+            .cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: false
+            })
+            .redirect(`${process.env.FRONTEND_URL}/`);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        });
+    }
+}
 module.exports = {
     signup,
     signin,
     logout,
     profile,
     updateProfile,
-    refreshToken
+    refreshToken,
+    googleAuthCallback
 }

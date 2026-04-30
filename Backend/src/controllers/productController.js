@@ -681,7 +681,7 @@ const updatedNewArrival = async (req, res) => {
 const searchProducts = async (req, res) => {
     try {
         const { query } = req.query;
-        
+
         const keywords = query.toLowerCase().trim().split(" ").filter(Boolean);
 
         const keywordVariants = [
@@ -999,27 +999,43 @@ const getTabs = async (req, res) => {
                 message: "Category not found"
             })
         }
-        const subCategories = await SUBCATEGORY_MODEL.aggregate([
+        const subCategories = await SUBCATEGORY_MODEL.find({
+            category: categoryData._id
+        }).select("_id name slug");
+
+        const counts = await PRODUCT_MODEL.aggregate([
             {
                 $match: {
-                    category: new mongoose.Types.ObjectId(categoryData._id)
+                    category: categoryData._id,
+                    isActive: true
                 }
             },
             {
-                $project: {
-                    _id: 0,
-                    name: 1,
-                    slug: 1
+                $group: {
+                    _id: "$subCategory",
+                    count: { $sum: 1 }
                 }
             }
-        ]);
+        ])
+
+        const countMap = {};
+        counts.forEach(item => {
+            countMap[item._id.toString()] = item.count;
+        });
+
+        const trendingCount = await PRODUCT_MODEL.countDocuments({
+            category: categoryData._id,
+            isTrending: true,
+            isActive: true
+        })
 
         const tabs = [
-            { name: "Trending", slug: "trending", type: "tag" },
+            { name: "Trending", slug: "trending", type: "tag", count: trendingCount },
             ...subCategories.map((sub) => ({
                 name: sub.name,
                 slug: sub.slug,
-                type: "subCategory"
+                type: "subCategory",
+                count: countMap[sub._id.toString()] || 0
             }))
         ];
 

@@ -9,6 +9,29 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchPoloTrending } from '../../features/products/productSlice';
 import { useNavigate } from 'react-router-dom';
 
+// ─── Skeleton Card ────────────────────────────────────────────────────────────
+
+const SkeletonCard = () => (
+    <div className="animate-pulse">
+        <div className="aspect-3/4 rounded-xl bg-gray-200" />
+        <div className="mt-2 h-3 w-3/4 bg-gray-200 rounded" />
+        <div className="mt-1 h-3 w-1/2 bg-gray-200 rounded" />
+        <div className="mt-1 h-3 w-1/3 bg-gray-200 rounded" />
+    </div>
+);
+
+// ─── Skeleton Grid ────────────────────────────────────────────────────────────
+
+const TrendingPoloSkeleton = () => (
+    <div className="px-2 md:px-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} />
+            ))}
+        </div>
+    </div>
+);
+
 const TrendingPolo = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -36,54 +59,58 @@ const TrendingPolo = () => {
                 </div>
             </div>
 
-            <div className="px-2 md:px-6 relative">
-                <Swiper
-                    modules={[Navigation, Pagination]}
-                    navigation
-                    pagination={{ clickable: true }}
-                    spaceBetween={16}
-                    grabCursor={true}
-                    breakpoints={{
-                        0: {
-                            slidesPerView: 2,
-                            slidesPerGroup: 2
-                        },
-                        768: {
-                            slidesPerView: 3,
-                            slidesPerGroup: 3
-                        },
-                        1024: {
-                            slidesPerView: 4,
-                            slidesPerGroup: 4
-                        }
-                    }}>
+            {loading ? (
+                <TrendingPoloSkeleton />
+            ) : (
+                <div className="px-2 md:px-6 relative">
+                    <Swiper
+                        modules={[Navigation, Pagination]}
+                        navigation
+                        pagination={{ clickable: true }}
+                        spaceBetween={16}
+                        grabCursor={true}
+                        breakpoints={{
+                            0: {
+                                slidesPerView: 2,
+                                slidesPerGroup: 2
+                            },
+                            768: {
+                                slidesPerView: 3,
+                                slidesPerGroup: 3
+                            },
+                            1024: {
+                                slidesPerView: 4,
+                                slidesPerGroup: 4
+                            }
+                        }}>
 
-                    {trendingPolo.map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <div onClick={() => navigate(`/product/${item._id}`)} className="group cursor-pointer">
-                                <div className="bg-white aspect-3/4 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition">
-                                    <img src={item.images?.[0]?.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                        {trendingPolo.map((item, index) => (
+                            <SwiperSlide key={index}>
+                                <div onClick={() => navigate(`/product/${item._id}`)} className="group cursor-pointer">
+                                    <div className="bg-white aspect-3/4 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition">
+                                        <img src={item.images?.[0]?.url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                                    </div>
+
+                                    <div className="mt-2">
+                                        <h3 className='font-semibold text-[#58595b] text-[11px] md:text-[14px] lg:border-b lg:border-dashed lg:pb-1 truncate'>
+                                            {item.name}
+                                        </h3>
+
+                                        <p className='text-gray-500 text-xs mt-1'>
+                                            {item.fitType}
+                                        </p>
+
+                                        <p className="font-semibold text-[12px] md:text-[14px] text-[#58595b] mt-1">
+                                            ₹{item.price}
+                                        </p>
+                                    </div>
                                 </div>
+                            </SwiperSlide>
+                        ))}
 
-                                <div className="mt-2">
-                                    <h3 className='font-semibold text-[#58595b] text-[11px] md:text-[14px] lg:border-b lg:border-dashed lg:pb-1 truncate'>
-                                        {item.name}
-                                    </h3>
-
-                                    <p className='text-gray-500 text-xs mt-1'>
-                                        {item.fitType}
-                                    </p>
-
-                                    <p className="font-semibold text-[12px] md:text-[14px] text-[#58595b] mt-1">
-                                        ₹{item.price}
-                                    </p>
-                                </div>
-                            </div>
-                        </SwiperSlide>
-                    ))}
-
-                </Swiper>
-            </div>
+                    </Swiper>
+                </div>
+            )}
         </section>
     )
 }

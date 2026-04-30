@@ -161,7 +161,6 @@ const updateCategory = async (req, res) => {
             }
         }
 
-
         if (name) {
             category.name = name;
             category.slug = slugify(name, { lower: true });

@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react'
+import { Heart, ShoppingBag } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom';
@@ -39,17 +39,6 @@ const ProductItem = ({ category,
 
         const priceFilter = selectedPrice ? PRICE_RANGE[selectedPrice] : {};
 
-        //     dispatch(fetchProducts({
-        //         category,
-        //         sub: subParams,
-        //         brands: brandsParam,
-        //         sizes: sizesParam,
-        //         sort: selectedSort,
-        //         search,
-        //         ...priceFilter
-        //     }))
-        // }, [dispatch, category, selectedCategories.join(","), selectedPrice, selectedBrands.join(","), selectedSizes.join(","), selectedSort, search])
-
         dispatch(fetchProducts({
             category,
             sub: subParams,
@@ -75,6 +64,16 @@ const ProductItem = ({ category,
         return <p className="text-center py-10">Loading...</p>;
     }
 
+    if (!loading && products.length === 0) {
+    return (
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+            <ShoppingBag size={48} className="text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700">No Products Found</h3>
+            <p className="text-sm text-gray-400 mt-1">Try adjusting your filters</p>
+        </div>
+    );
+}
+
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 px-4 md:px-0 py-4 md:py-6">
             {products.map((item, index) => (
@@ -98,11 +97,11 @@ const ProductItem = ({ category,
                     </div>
 
                     <div className="mt-2">
-                        <h3 className='text-sm text-[#585c70] font-semibold truncate border-b border-dashed border-gray-400 pb-0.5'>
+                        <h3 className='text-[11px] text-[#585c70] font-semibold border-b border-dashed border-gray-400 pb-0.5'>
                             {item.name}
                         </h3>
 
-                        <p className="text-sm text-[#737577] mt-1">
+                        <p className="text-[11px] text-[#737577] mt-1">
                             {item.subCategory?.name}
                         </p>
 

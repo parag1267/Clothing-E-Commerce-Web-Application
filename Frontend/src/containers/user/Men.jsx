@@ -7,11 +7,8 @@ const Men = () => {
   return (
     <>
         <MenSlider />
-
         <Categories categorySlug="men" />
-
         <TrendingPolo />
-
         <ProductList category="men" />
     </>
   )

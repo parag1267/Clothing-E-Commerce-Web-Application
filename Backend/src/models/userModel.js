@@ -20,13 +20,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 8,
-        select: false
+        select: false,
+        default: null
     },
 
     mobileNo: {
         type: String,
-        required: true,
+        required: false,
         unique: true,
+        sparse: true,
         match: [/^[6-9]\d{9}$/, "Invalid phone number"]
     },
 
@@ -68,6 +70,12 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
         select: false
+    },
+
+    authProvider: {
+        type: String,
+        enum: ["local","google"],
+        default: "local"
     }
 },{
     timestamps: true,

@@ -5,6 +5,8 @@ import { fetchProducts, fetchTabs, setActiveTab } from '../../features/products/
 import { useNavigate } from 'react-router-dom';
 import { getWishlist, toggleWishlist } from '../../features/wishlist/wishlistSlice';
 
+// ─── Skeleton Card ────────────────────────────────────────────────────────────
+
 const SkeletonCard = () => (
     <div className="animate-pulse">
         <div className="aspect-3/4 bg-gray-200 rounded-xl" />
@@ -13,6 +15,16 @@ const SkeletonCard = () => (
             <div className="h-3 bg-gray-200 rounded w-2/5" />
             <div className="h-3 bg-gray-200 rounded w-1/3" />
         </div>
+    </div>
+)
+
+// ─── Skeleton Tabs ────────────────────────────────────────────────────────────
+
+const SkeletonTabs = () => (
+    <div className="flex gap-2 overflow-x-auto py-3 md:py-4 scrollbar-hide animate-pulse">
+        {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 w-20 bg-gray-200 rounded-full flex-shrink-0" />
+        ))}
     </div>
 )
 
@@ -29,6 +41,20 @@ const ProductList = ({ category }) => {
         dispatch(getWishlist());
     }, [category, dispatch])
 
+    useEffect(() => {
+        if (tabs.length > 0 && !tabs.find(t => t.slug === activeTab)) {
+            const firstValidTab = tabs.find(
+                tab => tab.slug === "trending" || (tab.count || 0) > 0
+            );
+
+            if (firstValidTab) {
+                dispatch(setActiveTab(firstValidTab.slug));
+                dispatch(fetchProducts({ tab: firstValidTab.slug, category }));
+            }
+        }
+    }, [tabs]);
+
+
     const handleTabClick = (tab) => {
         dispatch(setActiveTab(tab.slug));
         dispatch(fetchProducts({ tab: tab.slug, category }));
@@ -39,19 +65,21 @@ const ProductList = ({ category }) => {
         <section className="pb-8 md:pb-12 bg-white">
             <div className="sticky top-27.5 lg:top-15 z-30 bg-white border-b border-gray-100 px-2 md:px-6">
                 <div className="flex gap-2 overflow-x-auto py-3 md:py-4 scrollbar-hide">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.slug}
-                            onClick={() => handleTabClick(tab)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200
+                    {tabs
+                        .filter(tab => tab.slug === "trending" || (tab.count || 0) > 0)
+                        .map((tab) => (
+                            <button
+                                key={tab.slug}
+                                onClick={() => handleTabClick(tab)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200
           ${activeTab === tab.slug
-                                    ? "bg-blue-500 text-white shadow-sm scale-[1.03]"
-                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                }`}
-                        >
-                            {tab.name}
-                        </button>
-                    ))}
+                                        ? "bg-blue-500 text-white shadow-sm scale-[1.03]"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                {tab.name}
+                            </button>
+                        ))}
                 </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 px-2 md:px-6">

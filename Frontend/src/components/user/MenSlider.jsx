@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Navigation, Autoplay } from 'swiper/modules';
 import slider1Mobile from '../../assets/Images/men-slider/mobile-image/mobile1.jpg'
@@ -15,77 +15,96 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
-const MenSlider = () => {
-    const slides = [
-        {
-            id: 1,
-            mobile: slider1Mobile,
-            desktop: slider1Lg,
-            alt: "Men Fashion 1",
-        },
-        {
-            id: 2,
-            mobile: slider2Mobile,
-            desktop: slider2Lg,
-            alt: "Men Fashion 2",
-        },
-        {
-            id: 3,
-            mobile: slider3Mobile,
-            desktop: slider3Lg,
-            alt: "Men Fashion 3",
-        },
-        {
-            id: 4,
-            mobile: slider4Mobile,
-            desktop: slider4Lg,
-            alt: "Men Fashion 4",
-        }
-    ];
+const slides = [
+    {
+        id: 1,
+        mobile: slider1Mobile,
+        desktop: slider1Lg,
+        alt: "Men Fashion 1",
+    },
+    {
+        id: 2,
+        mobile: slider2Mobile,
+        desktop: slider2Lg,
+        alt: "Men Fashion 2",
+    },
+    {
+        id: 3,
+        mobile: slider3Mobile,
+        desktop: slider3Lg,
+        alt: "Men Fashion 3",
+    },
+    {
+        id: 4,
+        mobile: slider4Mobile,
+        desktop: slider4Lg,
+        alt: "Men Fashion 4",
+    }
+];
 
+const SWIPER_CLASS = `
+  w-full h-auto
+  [&_.swiper-pagination-bullet]:bg-gray-400!
+  [&_.swiper-pagination-bullet-active]:bg-black!
+  [&_.swiper-pagination]:bottom-2
+  lg:[&_.swiper-pagination]:bottom-6
+`.trim();
+
+const SliderSkeleton = () => (
+    <div className="w-full animate-pulse">
+        {/* Mobile skeleton */}
+        <div className="block lg:hidden w-full h-[420px] bg-gray-200" />
+        {/* Desktop skeleton */}
+        <div className="hidden lg:block w-full h-[600px] bg-gray-200" />
+    </div>
+);
+
+const MenSlider = () => {
+    const [loaded, setLoaded] = useState(false);
     return (
         <div className="w-full relative">
-            <Swiper
-                modules={[Pagination, Navigation, Autoplay]}
-                spaceBetween={0}
-                slidesPerView={1}
-                pagination={{
-                    dynamicBullets: true,
-                    clickable: true,
-                }}
-                navigation={true}
-                autoplay={{
-                    delay: 3000,
-                    disableOnInteraction: false,
-                    pauseOnMouseEnter: true,
-                }}
-                loop={true}
-                className="w-full h-auto 
-                        [&_.swiper-pagination-bullet]:bg-gray-400!        
-                        [&_.swiper-pagination-bullet-active]:bg-black!
-                        [&_.swiper-pagination]:bottom-2 lg:[&_.swiper-pagination]:bottom-6"
-            >
-                {slides.map((slide) => (
-                    <SwiperSlide key={slide.id}>
-                        <div className="relative w-full">
-                            {/* Mobile image */}
-                            <img
-                                src={slide.mobile}
-                                alt={slide.alt}
-                                className="w-full h-auto block lg:hidden"
-                            />
-                            {/* Desktop image */}
-                            <img
-                                src={slide.desktop}
-                                alt={slide.alt}
-                                className="w-full h-auto hidden lg:block"
-                            />
-                        </div>
-                    </SwiperSlide>
-                ))}
-            </Swiper>
+            {!loaded && <SliderSkeleton />}
 
-            
+            <div className={loaded ? 'block' : 'hidden'}>
+                <Swiper
+                    modules={[Pagination, Navigation, Autoplay]}
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    pagination={{
+                        dynamicBullets: true,
+                        clickable: true,
+                    }}
+                    navigation={true}
+                    autoplay={{
+                        delay: 3000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    }}
+                    loop={true}
+                    className={SWIPER_CLASS}
+                >
+                    {slides.map((slide,index) => (
+                        <SwiperSlide key={slide.id}>
+                            <div className="relative w-full">
+                                {/* Mobile image */}
+                                <img
+                                    src={slide.mobile}
+                                    alt={slide.alt}
+                                    className="w-full h-auto block lg:hidden"
+                                    onLoad={() => index === 0 && setLoaded(true)}
+                                />
+                                {/* Desktop image */}
+                                <img
+                                    src={slide.desktop}
+                                    alt={slide.alt}
+                                    className="w-full h-auto hidden lg:block"
+                                    onLoad={() => index === 0 && setLoaded(true)}
+                                />
+                            </div>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </div>
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "../../utils/axiosInstance";
 
 const initialState = {
     user: null,
@@ -70,7 +70,6 @@ export const fetchUserProfile = createAsyncThunk(
     }
 )
 
-// authSlice.js
 export const logoutUser = createAsyncThunk(
     "auth/logoutUser",
     async (_, { dispatch, rejectWithValue }) => {
@@ -84,6 +83,24 @@ export const logoutUser = createAsyncThunk(
             rejectWithValue(error.response?.data?.message || "Logout failed")
         } finally {
             dispatch(logout())
+        }
+    }
+)
+
+export const googleUser = createAsyncThunk(
+    "auth/googleUser",
+    async (_,{rejectWithValue}) => {
+        try {
+            const res = await axios.get(
+                "http://localhost:5000/api/auth/profile",
+                {withCredentials: true}
+            ) 
+
+            return res.data.user;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Google login failed"
+            );
         }
     }
 )
@@ -169,6 +186,22 @@ const authSlice = createSlice({
             })
             .addCase(logoutUser.rejected, (state, action) => {
                 state.logoutLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(googleUser.pending,(state,action) => {
+                state.appLoading = true;
+                state.error = null;
+            })
+
+            .addCase(googleUser.fulfilled,(state,action) => {
+                state.appLoading = false;
+                state.user = action.payload;
+                state.isAuthenticated = true;
+            })
+
+            .addCase(googleUser.rejected,(state,action) => {
+                state.appLoading = false;
                 state.error = action.payload;
             })
     }

@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios, { all } from "axios";
+import axios from "../../utils/axiosInstance";
 
 const initialState = {
     relatedProducts: [],
